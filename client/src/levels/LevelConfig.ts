@@ -10,6 +10,8 @@ export interface LevelConfig {
   fogFar: number;
   ambientIntensity: number;
   ambientColor: string;
+  lightColor: string;
+  lightIntensity: number;
   roomSize: number;
   wallDensity: number;
   entityPool: string[];
@@ -28,6 +30,8 @@ export const LEVELS: LevelConfig[] = [
     fogFar: 50,
     ambientIntensity: 0.6,
     ambientColor: '#c8a850',
+    lightColor: '#fffde0',
+    lightIntensity: 1.2,
     roomSize: 4,
     wallDensity: 0.55,
     entityPool: ['smiler', 'facelings', 'dullers', 'deathmoths', 'jerry'],
@@ -44,6 +48,8 @@ export const LEVELS: LevelConfig[] = [
     fogFar: 40,
     ambientIntensity: 0.3,
     ambientColor: '#8090a0',
+    lightColor: '#c0d0e0',
+    lightIntensity: 0.8,
     roomSize: 6,
     wallDensity: 0.4,
     entityPool: ['hound', 'facelings', 'wretches', 'skin-stealer', 'crawlers'],
@@ -60,6 +66,8 @@ export const LEVELS: LevelConfig[] = [
     fogFar: 35,
     ambientIntensity: 0.2,
     ambientColor: '#506040',
+    lightColor: '#80a060',
+    lightIntensity: 0.6,
     roomSize: 3,
     wallDensity: 0.7,
     entityPool: ['crawlers', 'death-rats', 'dullers', 'wretches', 'smiler'],
@@ -76,6 +84,8 @@ export const LEVELS: LevelConfig[] = [
     fogFar: 30,
     ambientIntensity: 0.15,
     ambientColor: '#a03020',
+    lightColor: '#ff4020',
+    lightIntensity: 0.7,
     roomSize: 5,
     wallDensity: 0.6,
     entityPool: ['hound', 'skin-stealer', 'partygoers', 'crawlers', 'death-rats'],
@@ -92,6 +102,8 @@ export const LEVELS: LevelConfig[] = [
     fogFar: 45,
     ambientIntensity: 0.4,
     ambientColor: '#8090b0',
+    lightColor: '#d0e0ff',
+    lightIntensity: 0.9,
     roomSize: 4,
     wallDensity: 0.5,
     entityPool: ['facelings', 'partygoers', 'dullers', 'smiler', 'jerry'],

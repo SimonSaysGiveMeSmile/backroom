@@ -2,6 +2,7 @@ import { useRef, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useGame } from '../store/GameContext';
+import { resolveCollision } from '../systems/Collision';
 
 const SPEED = 3;
 const SPRINT_SPEED = 5.5;
@@ -81,8 +82,10 @@ export function Player() {
     velocity.current.addScaledVector(right, direction.current.x);
     velocity.current.normalize().multiplyScalar(speed * delta);
 
-    camera.position.x += velocity.current.x;
-    camera.position.z += velocity.current.z;
+    const currentPos = new THREE.Vector3(camera.position.x, 0, camera.position.z);
+    const resolved = resolveCollision(currentPos, velocity.current);
+    camera.position.x = resolved.x;
+    camera.position.z = resolved.z;
 
     if (isMoving.current) {
       bobPhase.current += delta * BOB_SPEED * (sprinting ? 1.4 : crouching ? 0.7 : 1);

@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { Room } from './Room';
 import { FluorescentLight } from './FluorescentLight';
@@ -7,8 +7,10 @@ import { FootstepAudio } from './FootstepAudio';
 import { EntityPresence } from './EntityPresence';
 import { EntityManager } from './EntityManager';
 import { ItemManager } from './ItemManager';
+import { PlayerModel } from './PlayerModel';
 import { useGame } from '../store/GameContext';
 import { LEVELS } from '../levels/LevelConfig';
+import { buildCollisionMap } from '../systems/Collision';
 
 interface RoomData {
   x: number;
@@ -57,6 +59,10 @@ export function BackroomsScene() {
     return grid;
   }, [state.level, levelConfig.roomSize, levelConfig.wallDensity]);
 
+  useEffect(() => {
+    buildCollisionMap(allRooms, levelConfig.roomSize);
+  }, [allRooms, levelConfig.roomSize]);
+
   useFrame(() => {
     const px = camera.position.x;
     const pz = camera.position.z;
@@ -93,11 +99,12 @@ export function BackroomsScene() {
   const visibleLights = useMemo(() => {
     const px = camera.position.x;
     const pz = camera.position.z;
+    const LIGHT_RADIUS = 28;
     return lights.filter(l => {
       const dx = l.x - px;
       const dz = l.z - pz;
-      return dx * dx + dz * dz < RENDER_RADIUS * RENDER_RADIUS;
-    });
+      return dx * dx + dz * dz < LIGHT_RADIUS * LIGHT_RADIUS;
+    }).slice(0, 16);
   }, [lights, visibleRooms]);
 
   return (
@@ -115,6 +122,7 @@ export function BackroomsScene() {
 
       <EntityManager />
       <ItemManager />
+      <PlayerModel />
       <AmbientAudio />
       <FootstepAudio />
       <EntityPresence />
