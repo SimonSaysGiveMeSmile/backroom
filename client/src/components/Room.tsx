@@ -1,5 +1,6 @@
-import { useRef, useMemo } from 'react';
+import { useMemo } from 'react';
 import * as THREE from 'three';
+import { LevelConfig } from '../levels/LevelConfig';
 
 interface RoomProps {
   x: number;
@@ -8,187 +9,113 @@ interface RoomProps {
   hasSouthWall: boolean;
   hasEastWall: boolean;
   hasWestWall: boolean;
+  levelConfig: LevelConfig;
 }
 
-const ROOM_SIZE = 4;
 const WALL_HEIGHT = 3;
 const WALL_THICKNESS = 0.1;
 
-function createWallpaperTexture(): THREE.CanvasTexture {
+const materialCache = new Map<string, THREE.MeshStandardMaterial>();
+
+function getMaterial(color: string, roughness: number, key: string): THREE.MeshStandardMaterial {
+  const cacheKey = `${key}-${color}`;
+  if (materialCache.has(cacheKey)) return materialCache.get(cacheKey)!;
+
   const canvas = document.createElement('canvas');
-  canvas.width = 256;
-  canvas.height = 256;
+  canvas.width = 64;
+  canvas.height = 64;
   const ctx = canvas.getContext('2d')!;
+  ctx.fillStyle = color;
+  ctx.fillRect(0, 0, 64, 64);
 
-  ctx.fillStyle = '#c8b060';
-  ctx.fillRect(0, 0, 256, 256);
-
-  for (let i = 0; i < 256; i += 2) {
-    for (let j = 0; j < 256; j += 2) {
-      const noise = Math.random() * 15;
-      ctx.fillStyle = `rgba(0,0,0,${noise / 255})`;
+  for (let i = 0; i < 64; i += 2) {
+    for (let j = 0; j < 64; j += 2) {
+      ctx.fillStyle = `rgba(0,0,0,${(Math.random() * 12) / 255})`;
       ctx.fillRect(i, j, 2, 2);
     }
   }
 
-  for (let x = 0; x < 256; x += 32) {
-    ctx.strokeStyle = 'rgba(160, 130, 50, 0.3)';
+  if (key === 'wall') {
+    for (let x = 0; x < 64; x += 16) {
+      ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+      ctx.lineWidth = 0.5;
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, 64);
+      ctx.stroke();
+    }
+  } else if (key === 'ceiling') {
+    ctx.strokeStyle = 'rgba(0,0,0,0.15)';
     ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(x, 0);
-    ctx.lineTo(x, 256);
-    ctx.stroke();
-  }
-
-  for (let y = 0; y < 256; y += 64) {
-    ctx.strokeStyle = 'rgba(100, 80, 30, 0.15)';
-    ctx.lineWidth = 0.5;
-    ctx.beginPath();
-    ctx.moveTo(0, y);
-    ctx.lineTo(256, y);
-    ctx.stroke();
-  }
-
-  ctx.fillStyle = 'rgba(80, 60, 20, 0.05)';
-  for (let i = 0; i < 20; i++) {
-    const sx = Math.random() * 256;
-    const sy = Math.random() * 256;
-    const sw = Math.random() * 40 + 10;
-    const sh = Math.random() * 40 + 10;
-    ctx.fillRect(sx, sy, sw, sh);
-  }
-
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.wrapS = THREE.RepeatWrapping;
-  texture.wrapT = THREE.RepeatWrapping;
-  texture.repeat.set(1, 1);
-  return texture;
-}
-
-function createCarpetTexture(): THREE.CanvasTexture {
-  const canvas = document.createElement('canvas');
-  canvas.width = 128;
-  canvas.height = 128;
-  const ctx = canvas.getContext('2d')!;
-
-  ctx.fillStyle = '#5c4a2a';
-  ctx.fillRect(0, 0, 128, 128);
-
-  for (let i = 0; i < 128; i++) {
-    for (let j = 0; j < 128; j++) {
-      const noise = Math.random() * 20;
-      ctx.fillStyle = `rgba(0,0,0,${noise / 255})`;
-      ctx.fillRect(i, j, 1, 1);
+    for (let x = 0; x <= 64; x += 32) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 64); ctx.stroke();
+    }
+    for (let y = 0; y <= 64; y += 32) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(64, y); ctx.stroke();
     }
   }
 
-  for (let i = 0; i < 50; i++) {
-    ctx.fillStyle = `rgba(60, 40, 20, ${Math.random() * 0.3})`;
-    ctx.fillRect(Math.random() * 128, Math.random() * 128, Math.random() * 8 + 2, Math.random() * 8 + 2);
-  }
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  if (key === 'floor') tex.repeat.set(2, 2);
 
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.wrapS = THREE.RepeatWrapping;
-  texture.wrapT = THREE.RepeatWrapping;
-  texture.repeat.set(2, 2);
-  return texture;
+  const mat = new THREE.MeshStandardMaterial({ map: tex, roughness });
+  materialCache.set(cacheKey, mat);
+  return mat;
 }
 
-function createCeilingTexture(): THREE.CanvasTexture {
-  const canvas = document.createElement('canvas');
-  canvas.width = 128;
-  canvas.height = 128;
-  const ctx = canvas.getContext('2d')!;
+const geoCache = new Map<string, THREE.BufferGeometry>();
 
-  ctx.fillStyle = '#d4c890';
-  ctx.fillRect(0, 0, 128, 128);
+function getGeo(type: string, roomSize: number): THREE.BufferGeometry {
+  const key = `${type}-${roomSize}`;
+  if (geoCache.has(key)) return geoCache.get(key)!;
 
-  ctx.strokeStyle = 'rgba(100, 80, 40, 0.4)';
-  ctx.lineWidth = 2;
-  for (let x = 0; x <= 128; x += 32) {
-    ctx.beginPath();
-    ctx.moveTo(x, 0);
-    ctx.lineTo(x, 128);
-    ctx.stroke();
+  let geo: THREE.BufferGeometry;
+  switch (type) {
+    case 'floor':
+    case 'ceiling':
+      geo = new THREE.PlaneGeometry(roomSize, roomSize);
+      break;
+    case 'wallWide':
+      geo = new THREE.BoxGeometry(roomSize, WALL_HEIGHT, WALL_THICKNESS);
+      break;
+    case 'wallDeep':
+      geo = new THREE.BoxGeometry(WALL_THICKNESS, WALL_HEIGHT, roomSize);
+      break;
+    default:
+      geo = new THREE.PlaneGeometry(1, 1);
   }
-  for (let y = 0; y <= 128; y += 32) {
-    ctx.beginPath();
-    ctx.moveTo(0, y);
-    ctx.lineTo(128, y);
-    ctx.stroke();
-  }
-
-  for (let i = 0; i < 128; i += 2) {
-    for (let j = 0; j < 128; j += 2) {
-      const noise = Math.random() * 10;
-      ctx.fillStyle = `rgba(0,0,0,${noise / 255})`;
-      ctx.fillRect(i, j, 2, 2);
-    }
-  }
-
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.wrapS = THREE.RepeatWrapping;
-  texture.wrapT = THREE.RepeatWrapping;
-  texture.repeat.set(1, 1);
-  return texture;
+  geoCache.set(key, geo);
+  return geo;
 }
 
-const wallTexture = createWallpaperTexture();
-const carpetTexture = createCarpetTexture();
-const ceilingTexture = createCeilingTexture();
+export function Room({ x, z, hasNorthWall, hasSouthWall, hasEastWall, hasWestWall, levelConfig }: RoomProps) {
+  const roomSize = levelConfig.roomSize;
+  const wallMat = useMemo(() => getMaterial(levelConfig.wallColor, 0.9, 'wall'), [levelConfig.wallColor]);
+  const floorMat = useMemo(() => getMaterial(levelConfig.floorColor, 1, 'floor'), [levelConfig.floorColor]);
+  const ceilMat = useMemo(() => getMaterial(levelConfig.ceilingColor, 0.8, 'ceiling'), [levelConfig.ceilingColor]);
 
-export function Room({ x, z, hasNorthWall, hasSouthWall, hasEastWall, hasWestWall }: RoomProps) {
-  const wallMaterial = useMemo(
-    () => new THREE.MeshStandardMaterial({ map: wallTexture, roughness: 0.9, metalness: 0 }),
-    []
-  );
-  const floorMaterial = useMemo(
-    () => new THREE.MeshStandardMaterial({ map: carpetTexture, roughness: 1, metalness: 0 }),
-    []
-  );
-  const ceilingMaterial = useMemo(
-    () => new THREE.MeshStandardMaterial({ map: ceilingTexture, roughness: 0.8, metalness: 0 }),
-    []
-  );
+  const floorGeo = useMemo(() => getGeo('floor', roomSize), [roomSize]);
+  const ceilGeo = useMemo(() => getGeo('ceiling', roomSize), [roomSize]);
+  const wallWide = useMemo(() => getGeo('wallWide', roomSize), [roomSize]);
+  const wallDeep = useMemo(() => getGeo('wallDeep', roomSize), [roomSize]);
 
   return (
     <group position={[x, 0, z]}>
-      {/* Floor */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} material={floorMaterial}>
-        <planeGeometry args={[ROOM_SIZE, ROOM_SIZE]} />
-      </mesh>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} geometry={floorGeo} material={floorMat} />
+      <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, WALL_HEIGHT, 0]} geometry={ceilGeo} material={ceilMat} />
 
-      {/* Ceiling */}
-      <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, WALL_HEIGHT, 0]} material={ceilingMaterial}>
-        <planeGeometry args={[ROOM_SIZE, ROOM_SIZE]} />
-      </mesh>
-
-      {/* North Wall */}
       {hasNorthWall && (
-        <mesh position={[0, WALL_HEIGHT / 2, -ROOM_SIZE / 2]} material={wallMaterial}>
-          <boxGeometry args={[ROOM_SIZE, WALL_HEIGHT, WALL_THICKNESS]} />
-        </mesh>
+        <mesh position={[0, WALL_HEIGHT / 2, -roomSize / 2]} geometry={wallWide} material={wallMat} />
       )}
-
-      {/* South Wall */}
       {hasSouthWall && (
-        <mesh position={[0, WALL_HEIGHT / 2, ROOM_SIZE / 2]} material={wallMaterial}>
-          <boxGeometry args={[ROOM_SIZE, WALL_HEIGHT, WALL_THICKNESS]} />
-        </mesh>
+        <mesh position={[0, WALL_HEIGHT / 2, roomSize / 2]} geometry={wallWide} material={wallMat} />
       )}
-
-      {/* East Wall */}
       {hasEastWall && (
-        <mesh position={[ROOM_SIZE / 2, WALL_HEIGHT / 2, 0]} material={wallMaterial}>
-          <boxGeometry args={[WALL_THICKNESS, WALL_HEIGHT, ROOM_SIZE]} />
-        </mesh>
+        <mesh position={[roomSize / 2, WALL_HEIGHT / 2, 0]} geometry={wallDeep} material={wallMat} />
       )}
-
-      {/* West Wall */}
       {hasWestWall && (
-        <mesh position={[-ROOM_SIZE / 2, WALL_HEIGHT / 2, 0]} material={wallMaterial}>
-          <boxGeometry args={[WALL_THICKNESS, WALL_HEIGHT, ROOM_SIZE]} />
-        </mesh>
+        <mesh position={[-roomSize / 2, WALL_HEIGHT / 2, 0]} geometry={wallDeep} material={wallMat} />
       )}
     </group>
   );

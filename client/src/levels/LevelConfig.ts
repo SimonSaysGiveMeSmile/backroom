@@ -1,0 +1,99 @@
+export interface LevelConfig {
+  id: number;
+  name: string;
+  subtitle: string;
+  wallColor: string;
+  floorColor: string;
+  ceilingColor: string;
+  fogColor: string;
+  fogNear: number;
+  fogFar: number;
+  ambientIntensity: number;
+  ambientColor: string;
+  roomSize: number;
+  wallDensity: number;
+  entityPool: string[];
+}
+
+export const LEVELS: LevelConfig[] = [
+  {
+    id: 0,
+    name: 'Level 0',
+    subtitle: 'Threshold',
+    wallColor: '#c8b060',
+    floorColor: '#6b5a35',
+    ceilingColor: '#d4c890',
+    fogColor: '#8b7940',
+    fogNear: 15,
+    fogFar: 50,
+    ambientIntensity: 0.6,
+    ambientColor: '#c8a850',
+    roomSize: 4,
+    wallDensity: 0.55,
+    entityPool: ['smiler', 'facelings', 'dullers', 'deathmoths', 'jerry'],
+  },
+  {
+    id: 1,
+    name: 'Level 1',
+    subtitle: 'Habitable Zone',
+    wallColor: '#707070',
+    floorColor: '#4a4a4a',
+    ceilingColor: '#5a5a5a',
+    fogColor: '#2a2a2a',
+    fogNear: 10,
+    fogFar: 40,
+    ambientIntensity: 0.3,
+    ambientColor: '#8090a0',
+    roomSize: 6,
+    wallDensity: 0.4,
+    entityPool: ['hound', 'facelings', 'wretches', 'skin-stealer', 'crawlers'],
+  },
+  {
+    id: 2,
+    name: 'Level 2',
+    subtitle: 'Abandoned Utility Halls',
+    wallColor: '#3d4a3a',
+    floorColor: '#2a3028',
+    ceilingColor: '#3a3a30',
+    fogColor: '#1a2018',
+    fogNear: 8,
+    fogFar: 35,
+    ambientIntensity: 0.2,
+    ambientColor: '#506040',
+    roomSize: 3,
+    wallDensity: 0.7,
+    entityPool: ['crawlers', 'death-rats', 'dullers', 'wretches', 'smiler'],
+  },
+  {
+    id: 3,
+    name: 'Level 3',
+    subtitle: 'Electrical Station',
+    wallColor: '#4a4040',
+    floorColor: '#3a3030',
+    ceilingColor: '#4a3a3a',
+    fogColor: '#2a1515',
+    fogNear: 8,
+    fogFar: 30,
+    ambientIntensity: 0.15,
+    ambientColor: '#a03020',
+    roomSize: 5,
+    wallDensity: 0.6,
+    entityPool: ['hound', 'skin-stealer', 'partygoers', 'crawlers', 'death-rats'],
+  },
+  {
+    id: 4,
+    name: 'Level 4',
+    subtitle: 'Abandoned Office',
+    wallColor: '#7080a0',
+    floorColor: '#4a5060',
+    ceilingColor: '#90a0b0',
+    fogColor: '#3a4050',
+    fogNear: 12,
+    fogFar: 45,
+    ambientIntensity: 0.4,
+    ambientColor: '#8090b0',
+    roomSize: 4,
+    wallDensity: 0.5,
+    entityPool: ['facelings', 'partygoers', 'dullers', 'smiler', 'jerry'],
+  },
+];

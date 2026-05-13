@@ -1,4 +1,11 @@
+import { useGame } from '../store/GameContext';
+import { LEVELS } from '../levels/LevelConfig';
+import { StatusBar } from './StatusBar';
+
 export function HUD() {
+  const { state } = useGame();
+  const levelConfig = LEVELS[state.level];
+
   return (
     <div
       style={{
@@ -41,19 +48,56 @@ export function HUD() {
           background: 'rgba(200, 180, 100, 0.3)',
         }}
       />
-      {/* Corner text */}
+      {/* Level indicator */}
       <div
         style={{
           position: 'absolute',
-          bottom: '20px',
+          bottom: '50px',
           left: '20px',
           fontFamily: 'monospace',
           fontSize: '11px',
-          color: 'rgba(200, 180, 100, 0.2)',
+          color: 'rgba(200, 180, 100, 0.3)',
         }}
       >
-        LEVEL 0 — THRESHOLD
+        {levelConfig.name} — {levelConfig.subtitle}
       </div>
+      {/* Crouch indicator */}
+      {state.isCrouching && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: '50px',
+            right: '20px',
+            fontFamily: 'monospace',
+            fontSize: '10px',
+            color: 'rgba(200, 180, 100, 0.4)',
+          }}
+        >
+          [CROUCHING]
+        </div>
+      )}
+      {/* Death screen */}
+      {state.health <= 0 && (
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'rgba(80, 0, 0, 0.8)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexDirection: 'column',
+          }}
+        >
+          <div style={{ fontFamily: 'monospace', fontSize: '24px', color: '#ff4444' }}>
+            YOU DIED
+          </div>
+          <div style={{ fontFamily: 'monospace', fontSize: '12px', color: '#aa4444', marginTop: '10px' }}>
+            Press ESC to restart
+          </div>
+        </div>
+      )}
+      <StatusBar />
     </div>
   );
 }

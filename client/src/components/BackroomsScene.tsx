@@ -1,9 +1,14 @@
-import { useMemo } from 'react';
+import { useMemo, useRef, useState } from 'react';
+import { useFrame, useThree } from '@react-three/fiber';
 import { Room } from './Room';
 import { FluorescentLight } from './FluorescentLight';
 import { AmbientAudio } from './AmbientAudio';
 import { FootstepAudio } from './FootstepAudio';
 import { EntityPresence } from './EntityPresence';
+import { EntityManager } from './EntityManager';
+import { ItemManager } from './ItemManager';
+import { useGame } from '../store/GameContext';
+import { LEVELS } from '../levels/LevelConfig';
 
 interface RoomData {
   x: number;
@@ -19,53 +24,97 @@ function seededRandom(seed: number) {
   return x - Math.floor(x);
 }
 
-export function BackroomsScene() {
-  const rooms = useMemo(() => {
-    const grid: RoomData[] = [];
-    const gridSize = 12;
-    const roomSize = 4;
+const GRID_SIZE = 24;
+const RENDER_RADIUS = 44;
 
-    for (let gx = -gridSize; gx <= gridSize; gx++) {
-      for (let gz = -gridSize; gz <= gridSize; gz++) {
-        const seed = gx * 1000 + gz;
-        const r = seededRandom(seed);
+export function BackroomsScene() {
+  const { state, dispatch } = useGame();
+  const { camera } = useThree();
+  const levelConfig = LEVELS[state.level];
+  const [visibleRooms, setVisibleRooms] = useState<RoomData[]>([]);
+  const lastChunkX = useRef(Infinity);
+  const lastChunkZ = useRef(Infinity);
+
+  const allRooms = useMemo(() => {
+    const grid: RoomData[] = [];
+    const roomSize = levelConfig.roomSize;
+    const density = levelConfig.wallDensity;
+
+    for (let gx = -GRID_SIZE; gx <= GRID_SIZE; gx++) {
+      for (let gz = -GRID_SIZE; gz <= GRID_SIZE; gz++) {
+        const seed = gx * 1000 + gz + state.level * 100000;
 
         grid.push({
           x: gx * roomSize,
           z: gz * roomSize,
-          hasNorthWall: r > 0.55 || gz === gridSize,
-          hasSouthWall: seededRandom(seed + 1) > 0.55 || gz === -gridSize,
-          hasEastWall: seededRandom(seed + 2) > 0.5 || gx === gridSize,
-          hasWestWall: seededRandom(seed + 3) > 0.5 || gx === -gridSize,
+          hasNorthWall: seededRandom(seed) > (1 - density) || gz === GRID_SIZE,
+          hasSouthWall: seededRandom(seed + 1) > (1 - density) || gz === -GRID_SIZE,
+          hasEastWall: seededRandom(seed + 2) > (1 - density + 0.05) || gx === GRID_SIZE,
+          hasWestWall: seededRandom(seed + 3) > (1 - density + 0.05) || gx === -GRID_SIZE,
         });
       }
     }
     return grid;
-  }, []);
+  }, [state.level, levelConfig.roomSize, levelConfig.wallDensity]);
+
+  useFrame(() => {
+    const px = camera.position.x;
+    const pz = camera.position.z;
+    const chunkX = Math.floor(px / 8);
+    const chunkZ = Math.floor(pz / 8);
+
+    if (chunkX !== lastChunkX.current || chunkZ !== lastChunkZ.current) {
+      lastChunkX.current = chunkX;
+      lastChunkZ.current = chunkZ;
+
+      const visible = allRooms.filter(room => {
+        const dx = room.x - px;
+        const dz = room.z - pz;
+        return dx * dx + dz * dz < RENDER_RADIUS * RENDER_RADIUS;
+      });
+      setVisibleRooms(visible);
+    }
+
+    dispatch({ type: 'SET_PLAYER_POSITION', x: px, z: pz });
+  });
 
   const lights = useMemo(() => {
     const l: { x: number; z: number }[] = [];
-    for (let x = -48; x <= 48; x += 8) {
-      for (let z = -48; z <= 48; z += 8) {
-        const offset = seededRandom(x * 100 + z) * 2 - 1;
-        l.push({ x: x + offset, z: z + offset });
+    const spacing = levelConfig.roomSize * 3;
+    const extent = GRID_SIZE * levelConfig.roomSize;
+    for (let x = -extent; x <= extent; x += spacing) {
+      for (let z = -extent; z <= extent; z += spacing) {
+        l.push({ x, z });
       }
     }
     return l;
-  }, []);
+  }, [state.level, levelConfig.roomSize]);
+
+  const visibleLights = useMemo(() => {
+    const px = camera.position.x;
+    const pz = camera.position.z;
+    return lights.filter(l => {
+      const dx = l.x - px;
+      const dz = l.z - pz;
+      return dx * dx + dz * dz < RENDER_RADIUS * RENDER_RADIUS;
+    });
+  }, [lights, visibleRooms]);
 
   return (
     <group>
-      <ambientLight intensity={0.05} color="#c8a030" />
+      <ambientLight intensity={levelConfig.ambientIntensity} color={levelConfig.ambientColor} />
+      <hemisphereLight args={[levelConfig.ambientColor, levelConfig.floorColor, 0.3]} />
 
-      {rooms.map((room, i) => (
-        <Room key={i} {...room} />
+      {visibleRooms.map((room, i) => (
+        <Room key={`${state.level}-${i}`} {...room} levelConfig={levelConfig} />
       ))}
 
-      {lights.map((light, i) => (
+      {visibleLights.map((light, i) => (
         <FluorescentLight key={i} position={[light.x, 2.9, light.z]} />
       ))}
 
+      <EntityManager />
+      <ItemManager />
       <AmbientAudio />
       <FootstepAudio />
       <EntityPresence />
