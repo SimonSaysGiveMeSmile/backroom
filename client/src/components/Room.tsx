@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, memo } from 'react';
 import * as THREE from 'three';
 import { LevelConfig } from '../levels/LevelConfig';
 
@@ -89,7 +89,7 @@ function getGeo(type: string, roomSize: number): THREE.BufferGeometry {
   return geo;
 }
 
-export function Room({ x, z, hasNorthWall, hasSouthWall, hasEastWall, hasWestWall, levelConfig }: RoomProps) {
+export const Room = memo(function Room({ x, z, hasNorthWall, hasSouthWall, hasEastWall, hasWestWall, levelConfig }: RoomProps) {
   const roomSize = levelConfig.roomSize;
   const wallMat = useMemo(() => getMaterial(levelConfig.wallColor, 0.9, 'wall'), [levelConfig.wallColor]);
   const floorMat = useMemo(() => getMaterial(levelConfig.floorColor, 1, 'floor'), [levelConfig.floorColor]);
@@ -119,4 +119,4 @@ export function Room({ x, z, hasNorthWall, hasSouthWall, hasEastWall, hasWestWal
       )}
     </group>
   );
-}
+});

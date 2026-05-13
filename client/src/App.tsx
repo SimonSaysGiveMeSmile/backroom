@@ -28,10 +28,11 @@ function Game() {
   return (
     <div style={{ width: '100vw', height: '100vh', cursor: settingsOpen ? 'default' : 'none' }}>
       <Canvas
-        camera={{ fov: 70, near: 0.1, far: 60, position: [0, 1.6, 0] }}
+        camera={{ fov: 70, near: 0.1, far: 60, position: [0, 1.6, 0], rotation: [0, 0, 0] }}
         gl={{ antialias: false, alpha: false, powerPreference: 'high-performance' }}
-        onCreated={({ gl }) => {
+        onCreated={({ gl, camera }) => {
           gl.setClearColor(levelConfig.fogColor);
+          camera.lookAt(0, 1.6, -10);
         }}
       >
         <fog attach="fog" args={[levelConfig.fogColor, levelConfig.fogNear, levelConfig.fogFar]} />

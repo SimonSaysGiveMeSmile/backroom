@@ -7,7 +7,6 @@ import { FootstepAudio } from './FootstepAudio';
 import { EntityPresence } from './EntityPresence';
 import { EntityManager } from './EntityManager';
 import { ItemManager } from './ItemManager';
-import { PlayerModel } from './PlayerModel';
 import { useGame } from '../store/GameContext';
 import { LEVELS } from '../levels/LevelConfig';
 import { buildCollisionMap } from '../systems/Collision';
@@ -26,8 +25,19 @@ function seededRandom(seed: number) {
   return x - Math.floor(x);
 }
 
+function isOpenArea(gx: number, gz: number, level: number): boolean {
+  // Spawn area is always open (3x3 around origin)
+  if (Math.abs(gx) <= 2 && Math.abs(gz) <= 2) return true;
+
+  // Cluster-based open areas (~30% of 5x5 clusters are open)
+  const clusterX = Math.floor(gx / 5);
+  const clusterZ = Math.floor(gz / 5);
+  const clusterSeed = clusterX * 1000 + clusterZ + level * 7777;
+  return seededRandom(clusterSeed) < 0.3;
+}
+
 const GRID_SIZE = 24;
-const RENDER_RADIUS = 44;
+const RENDER_RADIUS = 36;
 
 export function BackroomsScene() {
   const { state, dispatch } = useGame();
@@ -45,15 +55,27 @@ export function BackroomsScene() {
     for (let gx = -GRID_SIZE; gx <= GRID_SIZE; gx++) {
       for (let gz = -GRID_SIZE; gz <= GRID_SIZE; gz++) {
         const seed = gx * 1000 + gz + state.level * 100000;
+        const open = isOpenArea(gx, gz, state.level);
 
-        grid.push({
-          x: gx * roomSize,
-          z: gz * roomSize,
-          hasNorthWall: seededRandom(seed) > (1 - density) || gz === GRID_SIZE,
-          hasSouthWall: seededRandom(seed + 1) > (1 - density) || gz === -GRID_SIZE,
-          hasEastWall: seededRandom(seed + 2) > (1 - density + 0.05) || gx === GRID_SIZE,
-          hasWestWall: seededRandom(seed + 3) > (1 - density + 0.05) || gx === -GRID_SIZE,
-        });
+        if (open) {
+          grid.push({
+            x: gx * roomSize,
+            z: gz * roomSize,
+            hasNorthWall: gz === GRID_SIZE,
+            hasSouthWall: gz === -GRID_SIZE,
+            hasEastWall: gx === GRID_SIZE,
+            hasWestWall: gx === -GRID_SIZE,
+          });
+        } else {
+          grid.push({
+            x: gx * roomSize,
+            z: gz * roomSize,
+            hasNorthWall: seededRandom(seed) > (1 - density) || gz === GRID_SIZE,
+            hasSouthWall: seededRandom(seed + 1) > (1 - density) || gz === -GRID_SIZE,
+            hasEastWall: seededRandom(seed + 2) > (1 - density + 0.05) || gx === GRID_SIZE,
+            hasWestWall: seededRandom(seed + 3) > (1 - density + 0.05) || gx === -GRID_SIZE,
+          });
+        }
       }
     }
     return grid;
@@ -66,17 +88,18 @@ export function BackroomsScene() {
   useFrame(() => {
     const px = camera.position.x;
     const pz = camera.position.z;
-    const chunkX = Math.floor(px / 8);
-    const chunkZ = Math.floor(pz / 8);
+    const chunkX = Math.floor(px / 10);
+    const chunkZ = Math.floor(pz / 10);
 
     if (chunkX !== lastChunkX.current || chunkZ !== lastChunkZ.current) {
       lastChunkX.current = chunkX;
       lastChunkZ.current = chunkZ;
 
+      const rr = RENDER_RADIUS * RENDER_RADIUS;
       const visible = allRooms.filter(room => {
         const dx = room.x - px;
         const dz = room.z - pz;
-        return dx * dx + dz * dz < RENDER_RADIUS * RENDER_RADIUS;
+        return dx * dx + dz * dz < rr;
       });
       setVisibleRooms(visible);
     }
@@ -86,7 +109,7 @@ export function BackroomsScene() {
 
   const lights = useMemo(() => {
     const l: { x: number; z: number }[] = [];
-    const spacing = levelConfig.roomSize * 3;
+    const spacing = levelConfig.roomSize * 4;
     const extent = GRID_SIZE * levelConfig.roomSize;
     for (let x = -extent; x <= extent; x += spacing) {
       for (let z = -extent; z <= extent; z += spacing) {
@@ -99,12 +122,13 @@ export function BackroomsScene() {
   const visibleLights = useMemo(() => {
     const px = camera.position.x;
     const pz = camera.position.z;
-    const LIGHT_RADIUS = 28;
+    const LIGHT_RADIUS = 24;
+    const lr = LIGHT_RADIUS * LIGHT_RADIUS;
     return lights.filter(l => {
       const dx = l.x - px;
       const dz = l.z - pz;
-      return dx * dx + dz * dz < LIGHT_RADIUS * LIGHT_RADIUS;
-    }).slice(0, 16);
+      return dx * dx + dz * dz < lr;
+    }).slice(0, 12);
   }, [lights, visibleRooms]);
 
   return (
@@ -117,12 +141,16 @@ export function BackroomsScene() {
       ))}
 
       {visibleLights.map((light, i) => (
-        <FluorescentLight key={i} position={[light.x, 2.9, light.z]} />
+        <FluorescentLight
+          key={i}
+          position={[light.x, 2.9, light.z]}
+          lightColor={levelConfig.lightColor}
+          lightIntensity={levelConfig.lightIntensity}
+        />
       ))}
 
       <EntityManager />
       <ItemManager />
-      <PlayerModel />
       <AmbientAudio />
       <FootstepAudio />
       <EntityPresence />

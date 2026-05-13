@@ -1,16 +1,18 @@
-import { useRef } from 'react';
+import { useRef, memo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import { useGame } from '../store/GameContext';
-import { LEVELS } from '../levels/LevelConfig';
 
 interface FluorescentLightProps {
   position: [number, number, number];
+  lightColor?: string;
+  lightIntensity?: number;
 }
 
-export function FluorescentLight({ position }: FluorescentLightProps) {
-  const { state } = useGame();
-  const levelConfig = LEVELS[state.level];
+export const FluorescentLight = memo(function FluorescentLight({
+  position,
+  lightColor = '#fffde0',
+  lightIntensity = 1.0,
+}: FluorescentLightProps) {
   const meshRef = useRef<THREE.Mesh>(null);
   const lightRef = useRef<THREE.PointLight>(null);
   const flickerOffset = useRef(Math.random() * 1000);
@@ -26,7 +28,7 @@ export function FluorescentLight({ position }: FluorescentLightProps) {
       mat.opacity = Math.max(0.3, intensity);
     }
     if (lightRef.current) {
-      lightRef.current.intensity = Math.max(0.1, levelConfig.lightIntensity * intensity);
+      lightRef.current.intensity = Math.max(0.1, lightIntensity * intensity);
     }
   });
 
@@ -34,21 +36,19 @@ export function FluorescentLight({ position }: FluorescentLightProps) {
     <group position={position}>
       <pointLight
         ref={lightRef}
-        color={levelConfig.lightColor}
-        intensity={levelConfig.lightIntensity}
+        color={lightColor}
+        intensity={lightIntensity}
         distance={10}
         decay={2}
       />
-      {/* Fixture housing */}
       <mesh position={[0, 0.05, 0]}>
         <boxGeometry args={[1.2, 0.05, 0.3]} />
         <meshStandardMaterial color="#666666" roughness={0.6} metalness={0.3} />
       </mesh>
-      {/* Light tube */}
       <mesh ref={meshRef} position={[0, -0.01, 0]}>
         <boxGeometry args={[1.0, 0.04, 0.1]} />
-        <meshBasicMaterial color={levelConfig.lightColor} transparent opacity={0.9} />
+        <meshBasicMaterial color={lightColor} transparent opacity={0.9} />
       </mesh>
     </group>
   );
-}
+});
