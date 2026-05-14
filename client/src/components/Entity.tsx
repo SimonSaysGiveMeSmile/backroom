@@ -10,47 +10,36 @@ interface EntityProps {
 }
 
 function SmilerModel({ state }: { state: EntityState }) {
-  const intensity = state === 'chase' ? 3 : state === 'alert' ? 2 : 1;
+  const intensity = state === 'chase' ? 4 : state === 'alert' ? 2.5 : 1.5;
   return (
     <group>
-      {/* Dark floating head */}
+      {/* Invisible dark mass - barely perceptible */}
       <mesh position={[0, 1.4, 0]}>
-        <sphereGeometry args={[0.3, 10, 8]} />
-        <meshStandardMaterial color="#020202" roughness={1} />
+        <sphereGeometry args={[0.35, 8, 6]} />
+        <meshStandardMaterial color="#010101" roughness={1} transparent opacity={0.3} />
       </mesh>
-      {/* Wispy dark body */}
-      <mesh position={[0, 0.8, 0]}>
-        <coneGeometry args={[0.25, 1.2, 8]} />
-        <meshStandardMaterial color="#050505" transparent opacity={0.4} roughness={1} />
-      </mesh>
-      {/* Glowing reflective eyes */}
-      <mesh position={[-0.1, 1.5, 0.22]}>
-        <sphereGeometry args={[0.05, 6, 6]} />
+      {/* Two glowing eyes - the signature feature */}
+      <mesh position={[-0.09, 1.48, 0.28]}>
+        <circleGeometry args={[0.04, 8]} />
         <meshBasicMaterial color="#ffff00" />
       </mesh>
-      <mesh position={[0.1, 1.5, 0.22]}>
-        <sphereGeometry args={[0.05, 6, 6]} />
+      <mesh position={[0.09, 1.48, 0.28]}>
+        <circleGeometry args={[0.04, 8]} />
         <meshBasicMaterial color="#ffff00" />
       </mesh>
-      {/* Wide crescent smile */}
-      <mesh position={[0, 1.3, 0.24]} rotation={[0.1, 0, 0]}>
-        <torusGeometry args={[0.12, 0.015, 4, 16, Math.PI]} />
+      {/* Wide hostile grin - curved line of teeth */}
+      <mesh position={[0, 1.3, 0.28]} rotation={[0, 0, 0]}>
+        <torusGeometry args={[0.11, 0.012, 4, 20, Math.PI]} />
         <meshBasicMaterial color="#ffff00" />
       </mesh>
-      {/* Sharpened teeth */}
-      {[-0.08, -0.04, 0, 0.04, 0.08].map((x, i) => (
-        <mesh key={i} position={[x, 1.24, 0.26]} rotation={[0, 0, 0]}>
-          <coneGeometry args={[0.012, 0.04, 3]} />
-          <meshBasicMaterial color="#ffffcc" />
+      {/* Sharp teeth along the grin */}
+      {[-0.09, -0.06, -0.03, 0, 0.03, 0.06, 0.09].map((x, i) => (
+        <mesh key={i} position={[x, 1.235, 0.29]}>
+          <coneGeometry args={[0.008, 0.03, 3]} />
+          <meshBasicMaterial color="#ffff00" />
         </mesh>
       ))}
-      {[-0.06, -0.02, 0.02, 0.06].map((x, i) => (
-        <mesh key={`b${i}`} position={[x, 1.2, 0.25]} rotation={[Math.PI, 0, 0]}>
-          <coneGeometry args={[0.01, 0.035, 3]} />
-          <meshBasicMaterial color="#ffffcc" />
-        </mesh>
-      ))}
-      <pointLight color="#ffff00" intensity={intensity * 0.5} distance={5} decay={2} position={[0, 1.4, 0.3]} />
+      <pointLight color="#ffff00" intensity={intensity} distance={6} decay={2} position={[0, 1.4, 0.3]} />
     </group>
   );
 }
@@ -156,51 +145,65 @@ function SkinStealerModel({ state }: { state: EntityState }) {
   const eyeColor = state === 'chase' ? '#ff8800' : '#ff6600';
   return (
     <group>
-      {/* Elongated head */}
-      <mesh position={[0, 1.65, 0]}>
-        <sphereGeometry args={[0.12, 8, 6]} />
-        <meshStandardMaterial color="#7a5040" roughness={0.7} />
+      {/* Head - ill-fitting skin draped over skull */}
+      <mesh position={[0, 1.7, 0]}>
+        <sphereGeometry args={[0.13, 8, 6]} />
+        <meshStandardMaterial color="#c8a080" roughness={0.6} />
       </mesh>
-      {/* Glowing eyes */}
-      <mesh position={[-0.04, 1.67, 0.1]}>
+      {/* Sagging skin flap under chin */}
+      <mesh position={[0, 1.58, 0.06]}>
+        <boxGeometry args={[0.1, 0.06, 0.04]} />
+        <meshStandardMaterial color="#b89070" roughness={0.7} />
+      </mesh>
+      {/* Eyes peering through stolen skin */}
+      <mesh position={[-0.04, 1.72, 0.11]}>
         <sphereGeometry args={[0.02, 4, 4]} />
         <meshBasicMaterial color={eyeColor} />
       </mesh>
-      <mesh position={[0.04, 1.67, 0.1]}>
+      <mesh position={[0.04, 1.72, 0.11]}>
         <sphereGeometry args={[0.02, 4, 4]} />
         <meshBasicMaterial color={eyeColor} />
       </mesh>
-      {/* Thin stretched torso */}
+      {/* Torso - skin stretched over wrong proportions */}
       <mesh position={[0, 1.2, 0]}>
-        <boxGeometry args={[0.25, 0.7, 0.12]} />
-        <meshStandardMaterial color="#6a4030" roughness={0.8} />
+        <boxGeometry args={[0.3, 0.7, 0.15]} />
+        <meshStandardMaterial color="#b89070" roughness={0.7} />
       </mesh>
-      {/* Elongated arms */}
-      <mesh position={[-0.2, 1.0, 0]} rotation={[0, 0, 0.1]}>
-        <boxGeometry args={[0.06, 0.8, 0.06]} />
-        <meshStandardMaterial color="#7a5040" roughness={0.8} />
+      {/* Visible seam lines on torso */}
+      <mesh position={[0, 1.2, 0.08]}>
+        <boxGeometry args={[0.01, 0.5, 0.01]} />
+        <meshStandardMaterial color="#6a3020" roughness={0.9} />
       </mesh>
-      <mesh position={[0.2, 1.0, 0]} rotation={[0, 0, -0.1]}>
-        <boxGeometry args={[0.06, 0.8, 0.06]} />
-        <meshStandardMaterial color="#7a5040" roughness={0.8} />
+      <mesh position={[0.1, 1.2, 0.07]}>
+        <boxGeometry args={[0.01, 0.3, 0.01]} />
+        <meshStandardMaterial color="#6a3020" roughness={0.9} />
       </mesh>
-      {/* Long fingers */}
-      <mesh position={[-0.22, 0.55, 0]}>
-        <boxGeometry args={[0.08, 0.12, 0.03]} />
-        <meshStandardMaterial color="#8a6050" roughness={0.7} />
+      {/* Elongated arms - too long for the skin */}
+      <mesh position={[-0.22, 1.0, 0]} rotation={[0, 0, 0.08]}>
+        <boxGeometry args={[0.07, 0.85, 0.07]} />
+        <meshStandardMaterial color="#c8a080" roughness={0.7} />
       </mesh>
-      <mesh position={[0.22, 0.55, 0]}>
-        <boxGeometry args={[0.08, 0.12, 0.03]} />
-        <meshStandardMaterial color="#8a6050" roughness={0.7} />
+      <mesh position={[0.22, 1.0, 0]} rotation={[0, 0, -0.08]}>
+        <boxGeometry args={[0.07, 0.85, 0.07]} />
+        <meshStandardMaterial color="#c8a080" roughness={0.7} />
+      </mesh>
+      {/* Clawed fingers poking through */}
+      <mesh position={[-0.24, 0.52, 0]}>
+        <coneGeometry args={[0.02, 0.08, 4]} />
+        <meshStandardMaterial color="#3a2010" roughness={0.9} />
+      </mesh>
+      <mesh position={[0.24, 0.52, 0]}>
+        <coneGeometry args={[0.02, 0.08, 4]} />
+        <meshStandardMaterial color="#3a2010" roughness={0.9} />
       </mesh>
       {/* Legs */}
-      <mesh position={[-0.07, 0.45, 0]}>
-        <boxGeometry args={[0.08, 0.7, 0.08]} />
-        <meshStandardMaterial color="#5a3020" roughness={0.9} />
+      <mesh position={[-0.08, 0.4, 0]}>
+        <boxGeometry args={[0.09, 0.65, 0.09]} />
+        <meshStandardMaterial color="#8a7060" roughness={0.8} />
       </mesh>
-      <mesh position={[0.07, 0.45, 0]}>
-        <boxGeometry args={[0.08, 0.7, 0.08]} />
-        <meshStandardMaterial color="#5a3020" roughness={0.9} />
+      <mesh position={[0.08, 0.4, 0]}>
+        <boxGeometry args={[0.09, 0.65, 0.09]} />
+        <meshStandardMaterial color="#8a7060" roughness={0.8} />
       </mesh>
     </group>
   );
@@ -282,30 +285,41 @@ function CrawlerModel({ state }: { state: EntityState }) {
 function DullerModel() {
   return (
     <group>
-      {/* Featureless gray humanoid */}
-      <mesh position={[0, 1.35, 0]}>
-        <sphereGeometry args={[0.12, 8, 6]} />
-        <meshStandardMaterial color="#707070" roughness={0.6} />
+      {/* Tall grey faceless head - smooth, no features at all */}
+      <mesh position={[0, 1.9, 0]}>
+        <sphereGeometry args={[0.13, 10, 8]} />
+        <meshStandardMaterial color="#808080" roughness={0.5} />
       </mesh>
-      <mesh position={[0, 0.9, 0]}>
-        <boxGeometry args={[0.28, 0.55, 0.16]} />
-        <meshStandardMaterial color="#606060" roughness={0.7} />
+      {/* Tall thin torso */}
+      <mesh position={[0, 1.3, 0]}>
+        <boxGeometry args={[0.26, 0.9, 0.14]} />
+        <meshStandardMaterial color="#6a6a6a" roughness={0.7} />
       </mesh>
-      <mesh position={[-0.07, 0.35, 0]}>
-        <boxGeometry args={[0.09, 0.5, 0.09]} />
-        <meshStandardMaterial color="#555555" roughness={0.8} />
+      {/* Long thin arms hanging */}
+      <mesh position={[-0.18, 1.1, 0]}>
+        <boxGeometry args={[0.06, 0.8, 0.06]} />
+        <meshStandardMaterial color="#707070" roughness={0.7} />
       </mesh>
-      <mesh position={[0.07, 0.35, 0]}>
-        <boxGeometry args={[0.09, 0.5, 0.09]} />
-        <meshStandardMaterial color="#555555" roughness={0.8} />
+      <mesh position={[0.18, 1.1, 0]}>
+        <boxGeometry args={[0.06, 0.8, 0.06]} />
+        <meshStandardMaterial color="#707070" roughness={0.7} />
       </mesh>
-      {/* Dullness aura */}
-      <mesh position={[0, 0.8, 0]}>
-        <sphereGeometry args={[0.7, 12, 8]} />
-        <meshBasicMaterial color="#505050" transparent opacity={0.06} side={THREE.BackSide} />
+      {/* Long legs */}
+      <mesh position={[-0.07, 0.4, 0]}>
+        <boxGeometry args={[0.08, 0.7, 0.08]} />
+        <meshStandardMaterial color="#5a5a5a" roughness={0.8} />
       </mesh>
-      <mesh position={[0, 0.8, 0]}>
-        <sphereGeometry args={[0.5, 10, 6]} />
+      <mesh position={[0.07, 0.4, 0]}>
+        <boxGeometry args={[0.08, 0.7, 0.08]} />
+        <meshStandardMaterial color="#5a5a5a" roughness={0.8} />
+      </mesh>
+      {/* Dullness aura - double layer */}
+      <mesh position={[0, 1.1, 0]}>
+        <sphereGeometry args={[0.8, 12, 8]} />
+        <meshBasicMaterial color="#505050" transparent opacity={0.05} side={THREE.BackSide} />
+      </mesh>
+      <mesh position={[0, 1.1, 0]}>
+        <sphereGeometry args={[0.5, 8, 6]} />
         <meshBasicMaterial color="#404040" transparent opacity={0.04} side={THREE.BackSide} />
       </mesh>
     </group>
@@ -315,30 +329,43 @@ function DullerModel() {
 function PartygoerModel({ state }: { state: EntityState }) {
   return (
     <group>
-      {/* Bright yellow body */}
+      {/* Bright yellow head with wide unnatural smile */}
       <mesh position={[0, 1.35, 0]}>
         <sphereGeometry args={[0.14, 8, 6]} />
         <meshStandardMaterial color="#ffee00" emissive="#ffee00" emissiveIntensity={0.3} roughness={0.5} />
       </mesh>
-      {/* Wide permanent smile */}
-      <mesh position={[0, 1.28, 0.12]} rotation={[0.1, 0, 0]}>
-        <torusGeometry args={[0.06, 0.012, 4, 12, Math.PI]} />
+      {/* Wide permanent smile - too wide */}
+      <mesh position={[0, 1.27, 0.12]} rotation={[0.1, 0, 0]}>
+        <torusGeometry args={[0.08, 0.012, 4, 14, Math.PI]} />
         <meshBasicMaterial color="#111100" />
       </mesh>
-      {/* Dark eye dots */}
+      {/* Dark hollow eyes */}
       <mesh position={[-0.04, 1.37, 0.12]}>
-        <sphereGeometry args={[0.02, 4, 4]} />
-        <meshBasicMaterial color="#111100" />
+        <sphereGeometry args={[0.025, 4, 4]} />
+        <meshBasicMaterial color="#000000" />
       </mesh>
       <mesh position={[0.04, 1.37, 0.12]}>
-        <sphereGeometry args={[0.02, 4, 4]} />
-        <meshBasicMaterial color="#111100" />
+        <sphereGeometry args={[0.025, 4, 4]} />
+        <meshBasicMaterial color="#000000" />
       </mesh>
       {/* Party hat */}
       <mesh position={[0, 1.55, 0]}>
         <coneGeometry args={[0.08, 0.2, 6]} />
         <meshStandardMaterial color="#ff00cc" emissive="#ff00cc" emissiveIntensity={0.4} />
       </mesh>
+      {/* Balloons tied to hand */}
+      {[[-0.15, 2.0, 0.1, '#ff3333'], [-.05, 2.1, -0.05, '#33ff33'], [0.1, 1.95, 0.05, '#3333ff']].map(([x, y, z, color], i) => (
+        <group key={`balloon${i}`}>
+          <mesh position={[x as number, y as number, z as number]}>
+            <sphereGeometry args={[0.06, 6, 5]} />
+            <meshStandardMaterial color={color as string} emissive={color as string} emissiveIntensity={0.2} />
+          </mesh>
+          <mesh position={[x as number, (y as number) - 0.08, z as number]}>
+            <cylinderGeometry args={[0.003, 0.003, 0.3, 3]} />
+            <meshStandardMaterial color="#888888" />
+          </mesh>
+        </group>
+      ))}
       {/* Body */}
       <mesh position={[0, 0.9, 0]}>
         <boxGeometry args={[0.3, 0.55, 0.18]} />
