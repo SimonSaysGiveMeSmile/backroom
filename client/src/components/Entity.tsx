@@ -13,24 +13,23 @@ function SmilerModel({ state }: { state: EntityState }) {
   const intensity = state === 'chase' ? 3 : state === 'alert' ? 2 : 1;
   return (
     <group>
-      {/* Dark floating head - barely visible in darkness */}
+      {/* Dark floating head */}
       <mesh position={[0, 1.4, 0]}>
         <sphereGeometry args={[0.3, 10, 8]} />
         <meshStandardMaterial color="#020202" roughness={1} />
       </mesh>
-      {/* Wispy dark body that fades */}
+      {/* Wispy dark body */}
       <mesh position={[0, 0.8, 0]}>
         <coneGeometry args={[0.25, 1.2, 8]} />
         <meshStandardMaterial color="#050505" transparent opacity={0.4} roughness={1} />
       </mesh>
-      {/* Left eye - glowing yellow */}
+      {/* Glowing reflective eyes */}
       <mesh position={[-0.1, 1.5, 0.22]}>
-        <sphereGeometry args={[0.045, 6, 6]} />
+        <sphereGeometry args={[0.05, 6, 6]} />
         <meshBasicMaterial color="#ffff00" />
       </mesh>
-      {/* Right eye */}
       <mesh position={[0.1, 1.5, 0.22]}>
-        <sphereGeometry args={[0.045, 6, 6]} />
+        <sphereGeometry args={[0.05, 6, 6]} />
         <meshBasicMaterial color="#ffff00" />
       </mesh>
       {/* Wide crescent smile */}
@@ -38,6 +37,19 @@ function SmilerModel({ state }: { state: EntityState }) {
         <torusGeometry args={[0.12, 0.015, 4, 16, Math.PI]} />
         <meshBasicMaterial color="#ffff00" />
       </mesh>
+      {/* Sharpened teeth */}
+      {[-0.08, -0.04, 0, 0.04, 0.08].map((x, i) => (
+        <mesh key={i} position={[x, 1.24, 0.26]} rotation={[0, 0, 0]}>
+          <coneGeometry args={[0.012, 0.04, 3]} />
+          <meshBasicMaterial color="#ffffcc" />
+        </mesh>
+      ))}
+      {[-0.06, -0.02, 0.02, 0.06].map((x, i) => (
+        <mesh key={`b${i}`} position={[x, 1.2, 0.25]} rotation={[Math.PI, 0, 0]}>
+          <coneGeometry args={[0.01, 0.035, 3]} />
+          <meshBasicMaterial color="#ffffcc" />
+        </mesh>
+      ))}
       <pointLight color="#ffff00" intensity={intensity * 0.5} distance={5} decay={2} position={[0, 1.4, 0.3]} />
     </group>
   );
@@ -47,52 +59,60 @@ function HoundModel({ state }: { state: EntityState }) {
   const eyeColor = state === 'chase' ? '#ff0000' : '#ff4400';
   return (
     <group>
-      {/* Muscular body */}
+      {/* Muscular body - crawls on all fours */}
       <mesh position={[0, 0.4, 0]}>
         <boxGeometry args={[0.35, 0.3, 0.8]} />
         <meshStandardMaterial color="#1a0808" roughness={0.95} />
       </mesh>
-      {/* Ribcage detail */}
+      {/* Ribcage */}
       <mesh position={[0, 0.42, -0.1]}>
         <boxGeometry args={[0.38, 0.25, 0.4]} />
         <meshStandardMaterial color="#200e0e" roughness={0.9} />
       </mesh>
-      {/* Head */}
+      {/* Mangled head */}
       <mesh position={[0, 0.5, 0.4]}>
-        <boxGeometry args={[0.22, 0.2, 0.25]} />
+        <boxGeometry args={[0.24, 0.22, 0.25]} />
         <meshStandardMaterial color="#2a1010" roughness={0.9} />
       </mesh>
-      {/* Elongated snout with teeth */}
-      <mesh position={[0, 0.45, 0.58]}>
-        <boxGeometry args={[0.12, 0.1, 0.18]} />
+      {/* Long matted hair strands */}
+      {[-0.1, -0.05, 0, 0.05, 0.1].map((x, i) => (
+        <mesh key={`hair${i}`} position={[x, 0.6, 0.35]} rotation={[0.3, 0, (i - 2) * 0.1]}>
+          <cylinderGeometry args={[0.008, 0.005, 0.25, 3]} />
+          <meshStandardMaterial color="#1a0505" roughness={1} />
+        </mesh>
+      ))}
+      {[-0.08, 0, 0.08].map((x, i) => (
+        <mesh key={`hair2${i}`} position={[x, 0.58, 0.28]} rotation={[-0.2, 0, (i - 1) * 0.15]}>
+          <cylinderGeometry args={[0.006, 0.004, 0.2, 3]} />
+          <meshStandardMaterial color="#2a0808" roughness={1} />
+        </mesh>
+      ))}
+      {/* Mangled jaw / snout with exposed teeth */}
+      <mesh position={[0, 0.43, 0.56]}>
+        <boxGeometry args={[0.14, 0.1, 0.16]} />
         <meshStandardMaterial color="#1a0808" roughness={0.9} />
       </mesh>
-      {/* Teeth */}
-      <mesh position={[0, 0.42, 0.65]}>
-        <boxGeometry args={[0.08, 0.03, 0.04]} />
+      {/* Exposed teeth */}
+      <mesh position={[0, 0.4, 0.64]}>
+        <boxGeometry args={[0.1, 0.03, 0.04]} />
         <meshBasicMaterial color="#ccccaa" />
       </mesh>
-      {/* Eyes */}
+      {/* Bloodshot eyes */}
       <mesh position={[-0.08, 0.54, 0.52]}>
-        <sphereGeometry args={[0.025, 4, 4]} />
+        <sphereGeometry args={[0.028, 5, 5]} />
         <meshBasicMaterial color={eyeColor} />
       </mesh>
       <mesh position={[0.08, 0.54, 0.52]}>
-        <sphereGeometry args={[0.025, 4, 4]} />
+        <sphereGeometry args={[0.028, 5, 5]} />
         <meshBasicMaterial color={eyeColor} />
       </mesh>
-      {/* Four legs */}
-      {[[-0.12, 0.3], [0.12, 0.3], [-0.12, -0.3], [0.12, -0.3]].map(([x, z], i) => (
+      {/* Four limbs - crawling posture */}
+      {[[-0.14, 0.3], [0.14, 0.3], [-0.14, -0.3], [0.14, -0.3]].map(([x, z], i) => (
         <mesh key={i} position={[x, 0.17, z]}>
-          <boxGeometry args={[0.06, 0.34, 0.06]} />
+          <boxGeometry args={[0.07, 0.34, 0.07]} />
           <meshStandardMaterial color="#1a0808" roughness={0.9} />
         </mesh>
       ))}
-      {/* Tail */}
-      <mesh position={[0, 0.45, -0.45]} rotation={[0.5, 0, 0]}>
-        <cylinderGeometry args={[0.02, 0.01, 0.2, 4]} />
-        <meshStandardMaterial color="#1a0808" />
-      </mesh>
     </group>
   );
 }
@@ -440,12 +460,10 @@ function DeathmothModel({ state }: { state: EntityState }) {
 function JerryModel() {
   return (
     <group>
-      {/* Friendly blue-tinted humanoid */}
       <mesh position={[0, 1.35, 0]}>
         <sphereGeometry args={[0.13, 8, 6]} />
         <meshStandardMaterial color="#7aaacc" roughness={0.6} />
       </mesh>
-      {/* Friendly eyes */}
       <mesh position={[-0.04, 1.37, 0.11]}>
         <sphereGeometry args={[0.02, 4, 4]} />
         <meshBasicMaterial color="#88ddff" />
@@ -454,12 +472,10 @@ function JerryModel() {
         <sphereGeometry args={[0.02, 4, 4]} />
         <meshBasicMaterial color="#88ddff" />
       </mesh>
-      {/* Casual shirt */}
       <mesh position={[0, 0.9, 0]}>
         <boxGeometry args={[0.3, 0.55, 0.18]} />
         <meshStandardMaterial color="#4477aa" roughness={0.8} />
       </mesh>
-      {/* Pants */}
       <mesh position={[-0.07, 0.35, 0]}>
         <boxGeometry args={[0.1, 0.5, 0.1]} />
         <meshStandardMaterial color="#334466" roughness={0.9} />
@@ -468,7 +484,6 @@ function JerryModel() {
         <boxGeometry args={[0.1, 0.5, 0.1]} />
         <meshStandardMaterial color="#334466" roughness={0.9} />
       </mesh>
-      {/* Arms at sides */}
       <mesh position={[-0.22, 0.9, 0]}>
         <boxGeometry args={[0.07, 0.45, 0.07]} />
         <meshStandardMaterial color="#4477aa" roughness={0.8} />
@@ -478,6 +493,84 @@ function JerryModel() {
         <meshStandardMaterial color="#4477aa" roughness={0.8} />
       </mesh>
       <pointLight color="#88ccff" intensity={0.4} distance={4} decay={2} position={[0, 1.2, 0]} />
+    </group>
+  );
+}
+
+function ClumpModel({ state }: { state: EntityState }) {
+  return (
+    <group>
+      {/* Central mass of flesh */}
+      <mesh position={[0, 1.8, 0]}>
+        <sphereGeometry args={[0.35, 8, 6]} />
+        <meshStandardMaterial color="#6a3030" roughness={0.95} />
+      </mesh>
+      <mesh position={[0.1, 1.9, 0.1]}>
+        <sphereGeometry args={[0.2, 6, 5]} />
+        <meshStandardMaterial color="#5a2525" roughness={0.9} />
+      </mesh>
+      {/* Multiple arms reaching outward */}
+      {[0, 1, 2, 3, 4, 5].map(i => {
+        const angle = (i / 6) * Math.PI * 2;
+        const hang = 0.3 + Math.sin(i * 2.1) * 0.2;
+        return (
+          <mesh key={i} position={[Math.cos(angle) * 0.3, 1.8 - hang, Math.sin(angle) * 0.3]} rotation={[hang, angle, 0.5]}>
+            <cylinderGeometry args={[0.03, 0.02, 0.4, 4]} />
+            <meshStandardMaterial color="#7a4040" roughness={0.9} />
+          </mesh>
+        );
+      })}
+      {/* Fingers/claws at arm ends */}
+      {[0, 2, 4].map(i => {
+        const angle = (i / 6) * Math.PI * 2;
+        return (
+          <mesh key={`h${i}`} position={[Math.cos(angle) * 0.45, 1.4, Math.sin(angle) * 0.45]}>
+            <sphereGeometry args={[0.04, 4, 4]} />
+            <meshStandardMaterial color="#8a5050" roughness={0.8} />
+          </mesh>
+        );
+      })}
+      {/* Veiny texture patches */}
+      <mesh position={[-0.15, 1.7, 0.2]}>
+        <sphereGeometry args={[0.08, 4, 4]} />
+        <meshStandardMaterial color="#4a2020" roughness={1} />
+      </mesh>
+      {state === 'chase' && (
+        <pointLight color="#ff3333" intensity={0.5} distance={3} decay={2} position={[0, 1.8, 0]} />
+      )}
+    </group>
+  );
+}
+
+function WindowModel({ state }: { state: EntityState }) {
+  const glowIntensity = state === 'chase' ? 1.5 : 0.6;
+  return (
+    <group>
+      {/* Window frame */}
+      <mesh position={[0, 1.2, 0]}>
+        <boxGeometry args={[0.9, 1.3, 0.08]} />
+        <meshStandardMaterial color="#2a2a2a" roughness={0.9} />
+      </mesh>
+      {/* Glass pane - glowing hostile blue */}
+      <mesh position={[0, 1.2, 0.02]}>
+        <boxGeometry args={[0.7, 1.1, 0.02]} />
+        <meshStandardMaterial color="#2244aa" emissive="#4488ff" emissiveIntensity={glowIntensity} transparent opacity={0.7} />
+      </mesh>
+      {/* Cross frame divider */}
+      <mesh position={[0, 1.2, 0.04]}>
+        <boxGeometry args={[0.04, 1.1, 0.03]} />
+        <meshStandardMaterial color="#1a1a1a" roughness={0.9} />
+      </mesh>
+      <mesh position={[0, 1.2, 0.04]}>
+        <boxGeometry args={[0.7, 0.04, 0.03]} />
+        <meshStandardMaterial color="#1a1a1a" roughness={0.9} />
+      </mesh>
+      {/* Hostile eye-like shape in glass */}
+      <mesh position={[0, 1.3, 0.04]}>
+        <sphereGeometry args={[0.08, 6, 6]} />
+        <meshBasicMaterial color={state === 'chase' ? '#ff4444' : '#6688cc'} />
+      </mesh>
+      <pointLight color="#4488ff" intensity={glowIntensity * 0.5} distance={4} decay={2} position={[0, 1.2, 0.2]} />
     </group>
   );
 }
@@ -509,6 +602,8 @@ export const Entity = memo(function Entity({ def, position, state }: EntityProps
       case 'death-rats': return <DeathRatModel state={state} />;
       case 'deathmoths': return <DeathmothModel state={state} />;
       case 'jerry': return <JerryModel />;
+      case 'clumps': return <ClumpModel state={state} />;
+      case 'windows': return <WindowModel state={state} />;
       default: return <FacelingModel state={state} />;
     }
   })();

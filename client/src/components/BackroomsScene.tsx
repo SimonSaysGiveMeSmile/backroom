@@ -54,14 +54,35 @@ function generateRoomAt(gx: number, gz: number, level: number, roomSize: number,
       hasWestWall: atEdge && gx < 0,
     };
   }
-  return {
-    x: gx * roomSize,
-    z: gz * roomSize,
-    hasNorthWall: seededRandom(seed) > (1 - density * 0.5) || (atEdge && gz < 0),
-    hasSouthWall: seededRandom(seed + 1) > (1 - density * 0.5) || (atEdge && gz > 0),
-    hasEastWall: seededRandom(seed + 2) > (1 - density * 0.45) || (atEdge && gx > 0),
-    hasWestWall: seededRandom(seed + 3) > (1 - density * 0.45) || (atEdge && gx < 0),
-  };
+
+  let n = seededRandom(seed) > (1 - density * 0.75) || (atEdge && gz < 0);
+  let s = seededRandom(seed + 1) > (1 - density * 0.75) || (atEdge && gz > 0);
+  let e = seededRandom(seed + 2) > (1 - density * 0.7) || (atEdge && gx > 0);
+  let w = seededRandom(seed + 3) > (1 - density * 0.7) || (atEdge && gx < 0);
+
+  // Prevent dead ends: max 2 walls per room
+  const wallCount = [n, s, e, w].filter(Boolean).length;
+  if (wallCount >= 3) {
+    // Remove walls until only 2 remain, keeping edge walls
+    const walls = [
+      { key: 'n', val: n, edge: atEdge && gz < 0 },
+      { key: 's', val: s, edge: atEdge && gz > 0 },
+      { key: 'e', val: e, edge: atEdge && gx > 0 },
+      { key: 'w', val: w, edge: atEdge && gx < 0 },
+    ];
+    const removable = walls.filter(w => w.val && !w.edge);
+    let toRemove = wallCount - 2;
+    for (const wall of removable) {
+      if (toRemove <= 0) break;
+      if (wall.key === 'n') n = false;
+      else if (wall.key === 's') s = false;
+      else if (wall.key === 'e') e = false;
+      else if (wall.key === 'w') w = false;
+      toRemove--;
+    }
+  }
+
+  return { x: gx * roomSize, z: gz * roomSize, hasNorthWall: n, hasSouthWall: s, hasEastWall: e, hasWestWall: w };
 }
 
 function getRoomsInRadius(px: number, pz: number, radius: number, level: number, roomSize: number, density: number): RoomData[] {

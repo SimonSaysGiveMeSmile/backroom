@@ -30,6 +30,8 @@ const SOUND_CONFIGS: Record<string, SoundConfig> = {
   wretches: { waveform: 'triangle', baseFreq: 130, chaseFreq: 200, modRate: 5, modDepth: 20 },
   facelings: { waveform: 'sine', baseFreq: 200, chaseFreq: 250, modRate: 1.5, modDepth: 10 },
   jerry: { waveform: 'sine', baseFreq: 330, chaseFreq: 330, modRate: 2, modDepth: 5 },
+  clumps: { waveform: 'sawtooth', baseFreq: 55, chaseFreq: 90, modRate: 3, modDepth: 10 },
+  windows: { waveform: 'square', baseFreq: 600, chaseFreq: 1200, modRate: 6, modDepth: 100 },
 };
 
 interface ActiveEntitySound {

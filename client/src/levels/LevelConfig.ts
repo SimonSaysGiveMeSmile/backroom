@@ -33,8 +33,8 @@ export const LEVELS: LevelConfig[] = [
     lightColor: '#fffde0',
     lightIntensity: 1.2,
     roomSize: 4,
-    wallDensity: 0.3,
-    entityPool: ['smiler', 'dullers', 'deathmoths'],
+    wallDensity: 0.45,
+    entityPool: ['smiler', 'dullers', 'deathmoths', 'clumps'],
   },
   {
     id: 1,
@@ -51,8 +51,8 @@ export const LEVELS: LevelConfig[] = [
     lightColor: '#c0d0e0',
     lightIntensity: 0.8,
     roomSize: 6,
-    wallDensity: 0.25,
-    entityPool: ['hound', 'wretches', 'crawlers'],
+    wallDensity: 0.4,
+    entityPool: ['hound', 'wretches', 'crawlers', 'skin-stealer', 'clumps'],
   },
   {
     id: 2,
@@ -69,8 +69,8 @@ export const LEVELS: LevelConfig[] = [
     lightColor: '#80a060',
     lightIntensity: 0.6,
     roomSize: 3,
-    wallDensity: 0.35,
-    entityPool: ['crawlers', 'death-rats', 'dullers', 'wretches', 'smiler'],
+    wallDensity: 0.5,
+    entityPool: ['crawlers', 'death-rats', 'dullers', 'wretches', 'smiler', 'clumps'],
   },
   {
     id: 3,
@@ -87,8 +87,8 @@ export const LEVELS: LevelConfig[] = [
     lightColor: '#ff4020',
     lightIntensity: 0.7,
     roomSize: 5,
-    wallDensity: 0.3,
-    entityPool: ['hound', 'partygoers', 'crawlers', 'death-rats'],
+    wallDensity: 0.45,
+    entityPool: ['hound', 'partygoers', 'crawlers', 'death-rats', 'skin-stealer'],
   },
   {
     id: 4,
@@ -105,7 +105,7 @@ export const LEVELS: LevelConfig[] = [
     lightColor: '#d0e0ff',
     lightIntensity: 0.9,
     roomSize: 4,
-    wallDensity: 0.25,
-    entityPool: ['partygoers', 'dullers', 'smiler', 'deathmoths'],
+    wallDensity: 0.4,
+    entityPool: ['partygoers', 'dullers', 'smiler', 'deathmoths', 'facelings'],
   },
 ];
