@@ -59,7 +59,7 @@ const OtherPlayer = memo(function OtherPlayer({ player }: { player: RemotePlayer
 export function MultiplayerPlayers() {
   const { state } = useGame();
   const { camera } = useThree();
-  const { players, sendPosition, connected } = useMultiplayer(state.level);
+  const { players, sendPosition, connected, playerCount } = useMultiplayer(state.level);
   const sendTimer = useRef(0);
 
   useFrame((_, delta) => {

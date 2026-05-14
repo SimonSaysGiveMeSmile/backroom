@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 interface StartScreenProps {
   onStart: () => void;
@@ -7,11 +9,20 @@ interface StartScreenProps {
 export function StartScreen({ onStart }: StartScreenProps) {
   const [email, setEmail] = useState('');
   const [emailSubmitted, setEmailSubmitted] = useState(false);
+  const [playerCount, setPlayerCount] = useState(0);
+
+  useEffect(() => {
+    fetch(`${API_URL}/api/players`).then(r => r.json()).then(d => setPlayerCount(d.count)).catch(() => {});
+  }, []);
 
   const handleEmailSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (email.trim()) {
-      localStorage.setItem('backrooms_email', email);
+      fetch(`${API_URL}/api/signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim() }),
+      }).catch(() => {});
       setEmailSubmitted(true);
     }
   };
@@ -41,9 +52,14 @@ export function StartScreen({ onStart }: StartScreenProps) {
       >
         THE BACKROOMS
       </h1>
-      <p style={{ fontSize: '0.7rem', opacity: 0.5, marginBottom: '1.5rem' }}>
+      <p style={{ fontSize: '0.7rem', opacity: 0.5, marginBottom: '0.5rem' }}>
         backrooms.online
       </p>
+      {playerCount > 0 && (
+        <p style={{ fontSize: '0.75rem', opacity: 0.6, marginBottom: '1.5rem', color: '#88cc88' }}>
+          {playerCount} {playerCount === 1 ? 'wanderer' : 'wanderers'} online
+        </p>
+      )}
       <p style={{ fontSize: '0.9rem', opacity: 0.6, marginBottom: '1.5rem', maxWidth: '500px', textAlign: 'center', lineHeight: 1.6 }}>
         If you're not careful and noclip out of reality in the wrong areas, you'll end up in the Backrooms,
         where it's nothing but the stink of old moist carpet, the madness of mono-yellow, and the endless

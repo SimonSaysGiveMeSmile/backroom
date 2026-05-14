@@ -1,10 +1,23 @@
+import { useState, useEffect } from 'react';
 import { useGame } from '../store/GameContext';
 import { LEVELS } from '../levels/LevelConfig';
 import { StatusBar } from './StatusBar';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
 export function HUD() {
   const { state } = useGame();
   const levelConfig = LEVELS[state.level];
+  const [playerCount, setPlayerCount] = useState(1);
+
+  useEffect(() => {
+    const poll = () => {
+      fetch(`${API_URL}/api/players`).then(r => r.json()).then(d => setPlayerCount(d.count)).catch(() => {});
+    };
+    poll();
+    const interval = setInterval(poll, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div
@@ -60,6 +73,19 @@ export function HUD() {
         }}
       >
         {levelConfig.name} — {levelConfig.subtitle}
+      </div>
+      {/* Player count */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '15px',
+          right: '20px',
+          fontFamily: 'monospace',
+          fontSize: '11px',
+          color: 'rgba(200, 180, 100, 0.4)',
+        }}
+      >
+        {playerCount} online
       </div>
       {/* Crouch indicator */}
       {state.isCrouching && (

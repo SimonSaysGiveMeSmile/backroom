@@ -17,6 +17,7 @@ export function useMultiplayer(level: number) {
   const [players, setPlayers] = useState<Map<string, RemotePlayer>>(new Map());
   const [myId, setMyId] = useState<string | null>(null);
   const [connected, setConnected] = useState(false);
+  const [playerCount, setPlayerCount] = useState(0);
 
   useEffect(() => {
     const ws = new WebSocket(WS_URL);
@@ -34,11 +35,15 @@ export function useMultiplayer(level: number) {
         switch (msg.type) {
           case 'init':
             setMyId(msg.id);
+            setPlayerCount(msg.playerCount || 1);
             const initial = new Map<string, RemotePlayer>();
             for (const p of msg.players) {
               initial.set(p.id, p);
             }
             setPlayers(initial);
+            break;
+          case 'player_count':
+            setPlayerCount(msg.count);
             break;
           case 'player_join':
             setPlayers(prev => {
@@ -79,5 +84,5 @@ export function useMultiplayer(level: number) {
 
   const visiblePlayers = Array.from(players.values()).filter(p => p.level === level);
 
-  return { players: visiblePlayers, myId, connected, sendPosition };
+  return { players: visiblePlayers, myId, connected, playerCount, sendPosition };
 }
