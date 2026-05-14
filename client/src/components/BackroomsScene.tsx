@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, useEffect } from 'react';
+import { useMemo, useRef, useState, useEffect, useCallback } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { Room } from './Room';
 import { FluorescentLight } from './FluorescentLight';
@@ -7,6 +7,8 @@ import { FootstepAudio } from './FootstepAudio';
 import { EntityPresence } from './EntityPresence';
 import { EntityManager } from './EntityManager';
 import { ItemManager } from './ItemManager';
+import { Props } from './Props';
+import { MultiplayerPlayers } from './MultiplayerPlayers';
 import { useGame } from '../store/GameContext';
 import { LEVELS } from '../levels/LevelConfig';
 import { buildCollisionMap } from '../systems/Collision';
@@ -26,18 +28,65 @@ function seededRandom(seed: number) {
 }
 
 function isOpenArea(gx: number, gz: number, level: number): boolean {
-  // Spawn area is always open (3x3 around origin)
   if (Math.abs(gx) <= 2 && Math.abs(gz) <= 2) return true;
-
-  // Cluster-based open areas (~30% of 5x5 clusters are open)
   const clusterX = Math.floor(gx / 5);
   const clusterZ = Math.floor(gz / 5);
   const clusterSeed = clusterX * 1000 + clusterZ + level * 7777;
   return seededRandom(clusterSeed) < 0.3;
 }
 
-const GRID_SIZE = 24;
-const RENDER_RADIUS = 36;
+const MAP_EXTENT = 1000;
+const RENDER_RADIUS = 40;
+const COLLISION_RADIUS = 50;
+
+function generateRoomAt(gx: number, gz: number, level: number, roomSize: number, density: number): RoomData {
+  const seed = gx * 10007 + gz * 7919 + level * 100003;
+  const open = isOpenArea(gx, gz, level);
+  const atEdge = Math.abs(gx * roomSize) >= MAP_EXTENT || Math.abs(gz * roomSize) >= MAP_EXTENT;
+
+  if (open) {
+    return {
+      x: gx * roomSize,
+      z: gz * roomSize,
+      hasNorthWall: atEdge && gz < 0,
+      hasSouthWall: atEdge && gz > 0,
+      hasEastWall: atEdge && gx > 0,
+      hasWestWall: atEdge && gx < 0,
+    };
+  }
+  return {
+    x: gx * roomSize,
+    z: gz * roomSize,
+    hasNorthWall: seededRandom(seed) > (1 - density) || (atEdge && gz < 0),
+    hasSouthWall: seededRandom(seed + 1) > (1 - density) || (atEdge && gz > 0),
+    hasEastWall: seededRandom(seed + 2) > (1 - density + 0.05) || (atEdge && gx > 0),
+    hasWestWall: seededRandom(seed + 3) > (1 - density + 0.05) || (atEdge && gx < 0),
+  };
+}
+
+function getRoomsInRadius(px: number, pz: number, radius: number, level: number, roomSize: number, density: number): RoomData[] {
+  const rooms: RoomData[] = [];
+  const gridRadius = Math.ceil(radius / roomSize);
+  const pgx = Math.round(px / roomSize);
+  const pgz = Math.round(pz / roomSize);
+  const maxGrid = Math.floor(MAP_EXTENT / roomSize);
+  const rr = radius * radius;
+
+  for (let dx = -gridRadius; dx <= gridRadius; dx++) {
+    for (let dz = -gridRadius; dz <= gridRadius; dz++) {
+      const gx = pgx + dx;
+      const gz = pgz + dz;
+      if (Math.abs(gx) > maxGrid || Math.abs(gz) > maxGrid) continue;
+      const wx = gx * roomSize;
+      const wz = gz * roomSize;
+      const ddx = wx - px;
+      const ddz = wz - pz;
+      if (ddx * ddx + ddz * ddz > rr) continue;
+      rooms.push(generateRoomAt(gx, gz, level, roomSize, density));
+    }
+  }
+  return rooms;
+}
 
 export function BackroomsScene() {
   const { state, dispatch } = useGame();
@@ -47,113 +96,68 @@ export function BackroomsScene() {
   const lastChunkX = useRef(Infinity);
   const lastChunkZ = useRef(Infinity);
 
-  const allRooms = useMemo(() => {
-    const grid: RoomData[] = [];
-    const roomSize = levelConfig.roomSize;
-    const density = levelConfig.wallDensity;
-
-    for (let gx = -GRID_SIZE; gx <= GRID_SIZE; gx++) {
-      for (let gz = -GRID_SIZE; gz <= GRID_SIZE; gz++) {
-        const seed = gx * 1000 + gz + state.level * 100000;
-        const open = isOpenArea(gx, gz, state.level);
-
-        if (open) {
-          grid.push({
-            x: gx * roomSize,
-            z: gz * roomSize,
-            hasNorthWall: gz === GRID_SIZE,
-            hasSouthWall: gz === -GRID_SIZE,
-            hasEastWall: gx === GRID_SIZE,
-            hasWestWall: gx === -GRID_SIZE,
-          });
-        } else {
-          grid.push({
-            x: gx * roomSize,
-            z: gz * roomSize,
-            hasNorthWall: seededRandom(seed) > (1 - density) || gz === GRID_SIZE,
-            hasSouthWall: seededRandom(seed + 1) > (1 - density) || gz === -GRID_SIZE,
-            hasEastWall: seededRandom(seed + 2) > (1 - density + 0.05) || gx === GRID_SIZE,
-            hasWestWall: seededRandom(seed + 3) > (1 - density + 0.05) || gx === -GRID_SIZE,
-          });
-        }
-      }
-    }
-    return grid;
-  }, [state.level, levelConfig.roomSize, levelConfig.wallDensity]);
-
-  useEffect(() => {
-    buildCollisionMap(allRooms, levelConfig.roomSize);
-  }, [allRooms, levelConfig.roomSize]);
-
   useFrame(() => {
     const px = camera.position.x;
     const pz = camera.position.z;
-    const chunkX = Math.floor(px / 10);
-    const chunkZ = Math.floor(pz / 10);
+    const chunkX = Math.floor(px / 8);
+    const chunkZ = Math.floor(pz / 8);
 
     if (chunkX !== lastChunkX.current || chunkZ !== lastChunkZ.current) {
       lastChunkX.current = chunkX;
       lastChunkZ.current = chunkZ;
 
-      const rr = RENDER_RADIUS * RENDER_RADIUS;
-      const visible = allRooms.filter(room => {
-        const dx = room.x - px;
-        const dz = room.z - pz;
-        return dx * dx + dz * dz < rr;
-      });
-      setVisibleRooms(visible);
+      const rooms = getRoomsInRadius(px, pz, RENDER_RADIUS, state.level, levelConfig.roomSize, levelConfig.wallDensity);
+      setVisibleRooms(rooms);
+
+      const collisionRooms = getRoomsInRadius(px, pz, COLLISION_RADIUS, state.level, levelConfig.roomSize, levelConfig.wallDensity);
+      buildCollisionMap(collisionRooms, levelConfig.roomSize);
     }
 
     dispatch({ type: 'SET_PLAYER_POSITION', x: px, z: pz });
   });
 
-  const lights = useMemo(() => {
+  const visibleLights = useMemo(() => {
     const l: { x: number; z: number }[] = [];
     const spacing = levelConfig.roomSize * 4;
-    const extent = GRID_SIZE * levelConfig.roomSize;
-    for (let x = -extent; x <= extent; x += spacing) {
-      for (let z = -extent; z <= extent; z += spacing) {
-        l.push({ x, z });
+    if (visibleRooms.length === 0) return l;
+    const px = lastChunkX.current * 8;
+    const pz = lastChunkZ.current * 8;
+    const lightRadius = 28;
+    const startX = Math.floor((px - lightRadius) / spacing) * spacing;
+    const startZ = Math.floor((pz - lightRadius) / spacing) * spacing;
+    for (let x = startX; x <= px + lightRadius; x += spacing) {
+      for (let z = startZ; z <= pz + lightRadius; z += spacing) {
+        const dx = x - px;
+        const dz = z - pz;
+        if (dx * dx + dz * dz < lightRadius * lightRadius) {
+          l.push({ x, z });
+        }
       }
     }
-    return l;
-  }, [state.level, levelConfig.roomSize]);
-
-  const visibleLights = useMemo(() => {
-    const px = camera.position.x;
-    const pz = camera.position.z;
-    const LIGHT_RADIUS = 24;
-    const lr = LIGHT_RADIUS * LIGHT_RADIUS;
-    return lights.filter(l => {
-      const dx = l.x - px;
-      const dz = l.z - pz;
-      return dx * dx + dz * dz < lr;
-    }).slice(0, 12);
-  }, [lights, visibleRooms]);
+    return l.slice(0, 16);
+  }, [visibleRooms, levelConfig.roomSize]);
 
   return (
     <group>
       <ambientLight intensity={levelConfig.ambientIntensity * 1.4} color={levelConfig.ambientColor} />
       <hemisphereLight args={[levelConfig.lightColor, levelConfig.floorColor, 0.5]} />
-      <directionalLight
-        color={levelConfig.lightColor}
-        intensity={0.3}
-        position={[0, 3, 0]}
-      />
+      <directionalLight color={levelConfig.lightColor} intensity={0.3} position={[0, 3, 0]} />
 
       {visibleRooms.map((room, i) => (
-        <Room key={`${state.level}-${i}`} {...room} levelConfig={levelConfig} />
+        <Room key={`${state.level}-${room.x}-${room.z}`} {...room} levelConfig={levelConfig} />
       ))}
 
       {visibleLights.map((light, i) => (
         <FluorescentLight
-          key={i}
+          key={`l-${light.x}-${light.z}`}
           position={[light.x, 2.9, light.z]}
           lightColor={levelConfig.lightColor}
           lightIntensity={levelConfig.lightIntensity}
         />
       ))}
 
+      <Props />
+      <MultiplayerPlayers />
       <EntityManager />
       <ItemManager />
       <AmbientAudio />

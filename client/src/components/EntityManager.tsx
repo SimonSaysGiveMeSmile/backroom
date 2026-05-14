@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { Entity } from './Entity';
@@ -12,19 +12,25 @@ function seededRandom(seed: number) {
   return x - Math.floor(x);
 }
 
+const SPAWN_RADIUS = 100;
+const DESPAWN_RADIUS = 120;
+const MAX_ENTITIES = 30;
+
 export function EntityManager() {
   const { state, dispatch } = useGame();
   const { camera } = useThree();
   const entitiesRef = useRef<EntityInstance[]>([]);
   const initialized = useRef(-1);
   const attackCooldown = useRef(0);
+  const spawnTimer = useRef(0);
+  const nextId = useRef(0);
 
   const levelConfig = LEVELS[state.level];
   const mult = getDifficultyMultipliers(state.difficulty);
 
   if (initialized.current !== state.level) {
     const pool = levelConfig.entityPool;
-    const count = Math.floor(8 * mult.spawnRate);
+    const count = Math.floor(15 * mult.spawnRate);
     const spawned: EntityInstance[] = [];
 
     for (let i = 0; i < count; i++) {
@@ -33,11 +39,11 @@ export function EntityManager() {
       if (!def) continue;
 
       const angle = seededRandom(i * 13) * Math.PI * 2;
-      const dist = 20 + seededRandom(i * 31) * 60;
+      const dist = 25 + seededRandom(i * 31) * 80;
       const pos = new THREE.Vector3(Math.cos(angle) * dist, 0, Math.sin(angle) * dist);
 
       spawned.push({
-        id: i,
+        id: nextId.current++,
         def,
         position: pos,
         targetPosition: getRandomWaypoint(pos, 10),
@@ -57,7 +63,41 @@ export function EntityManager() {
 
     const playerPos = new THREE.Vector3(camera.position.x, 0, camera.position.z);
     attackCooldown.current = Math.max(0, attackCooldown.current - delta);
+    spawnTimer.current += delta;
 
+    // Dynamic spawning - add new entities as player explores
+    if (spawnTimer.current > 5 && entitiesRef.current.length < MAX_ENTITIES) {
+      spawnTimer.current = 0;
+      const pool = levelConfig.entityPool;
+      const entityId = pool[Math.floor(Math.random() * pool.length)];
+      const def = ENTITIES[entityId];
+      if (def) {
+        const angle = Math.random() * Math.PI * 2;
+        const dist = 60 + Math.random() * 40;
+        const pos = new THREE.Vector3(
+          playerPos.x + Math.cos(angle) * dist,
+          0,
+          playerPos.z + Math.sin(angle) * dist
+        );
+        entitiesRef.current.push({
+          id: nextId.current++,
+          def,
+          position: pos,
+          targetPosition: getRandomWaypoint(pos, 15),
+          state: 'patrol',
+          stateTimer: 0,
+          alertLevel: 0,
+          lastKnownPlayerPos: null,
+        });
+      }
+    }
+
+    // Despawn far entities
+    entitiesRef.current = entitiesRef.current.filter(e => {
+      return e.position.distanceTo(playerPos) < DESPAWN_RADIUS;
+    });
+
+    // Update AI
     entitiesRef.current = entitiesRef.current.map(entity => {
       const dist = entity.position.distanceTo(playerPos);
       if (dist > 80) return entity;
