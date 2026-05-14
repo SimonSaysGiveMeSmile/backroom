@@ -103,8 +103,8 @@ export const ItemPickup = memo(function ItemPickup({ def, position, onPickup, pl
   useFrame(({ clock }) => {
     if (!groupRef.current || collected.current) return;
     const t = clock.getElapsedTime();
-    groupRef.current.position.set(position[0], position[1] + 0.4 + Math.sin(t * 2.5) * 0.06, position[2]);
-    groupRef.current.rotation.y = t * 1.5;
+    groupRef.current.position.set(position[0], 0.15 + Math.sin(t * 2) * 0.02, position[2]);
+    groupRef.current.rotation.y = t * 1.2;
 
     const dx = position[0] - playerPos.x;
     const dz = position[2] - playerPos.z;

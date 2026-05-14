@@ -28,11 +28,11 @@ function seededRandom(seed: number) {
 }
 
 function isOpenArea(gx: number, gz: number, level: number): boolean {
-  if (Math.abs(gx) <= 2 && Math.abs(gz) <= 2) return true;
-  const clusterX = Math.floor(gx / 5);
-  const clusterZ = Math.floor(gz / 5);
+  if (Math.abs(gx) <= 3 && Math.abs(gz) <= 3) return true;
+  const clusterX = Math.floor(gx / 4);
+  const clusterZ = Math.floor(gz / 4);
   const clusterSeed = clusterX * 1000 + clusterZ + level * 7777;
-  return seededRandom(clusterSeed) < 0.3;
+  return seededRandom(clusterSeed) < 0.65;
 }
 
 const MAP_EXTENT = 1000;
@@ -57,10 +57,10 @@ function generateRoomAt(gx: number, gz: number, level: number, roomSize: number,
   return {
     x: gx * roomSize,
     z: gz * roomSize,
-    hasNorthWall: seededRandom(seed) > (1 - density) || (atEdge && gz < 0),
-    hasSouthWall: seededRandom(seed + 1) > (1 - density) || (atEdge && gz > 0),
-    hasEastWall: seededRandom(seed + 2) > (1 - density + 0.05) || (atEdge && gx > 0),
-    hasWestWall: seededRandom(seed + 3) > (1 - density + 0.05) || (atEdge && gx < 0),
+    hasNorthWall: seededRandom(seed) > (1 - density * 0.5) || (atEdge && gz < 0),
+    hasSouthWall: seededRandom(seed + 1) > (1 - density * 0.5) || (atEdge && gz > 0),
+    hasEastWall: seededRandom(seed + 2) > (1 - density * 0.45) || (atEdge && gx > 0),
+    hasWestWall: seededRandom(seed + 3) > (1 - density * 0.45) || (atEdge && gx < 0),
   };
 }
 

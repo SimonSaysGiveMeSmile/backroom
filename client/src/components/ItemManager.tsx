@@ -70,9 +70,7 @@ export function ItemManager() {
     if (effect.health && effect.health < 0) dispatch({ type: 'DAMAGE', amount: -effect.health });
     if (effect.water) dispatch({ type: 'RESTORE_WATER', amount: effect.water });
     if (effect.food) dispatch({ type: 'RESTORE_FOOD', amount: effect.food });
-    if (effect.key || effect.repellent || effect.damage || effect.shield || effect.light || effect.speed) {
-      dispatch({ type: 'ADD_ITEM', item: { id: item.def.id, name: item.def.name, quantity: 1 } });
-    }
+    dispatch({ type: 'ADD_ITEM', item: { id: item.def.id, name: item.def.name, quantity: 1 } });
   };
 
   const visible = items.filter(i => {
