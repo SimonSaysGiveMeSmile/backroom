@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { EntityState, EntityDef } from './EntityData';
 import { getDifficultyMultipliers, Difficulty } from '../store/GameContext';
+import { getWallSegments } from '../systems/Collision';
 
 export interface EntityInstance {
   id: number;
@@ -11,6 +12,7 @@ export interface EntityInstance {
   stateTimer: number;
   alertLevel: number;
   lastKnownPlayerPos: THREE.Vector3 | null;
+  hp: number;
 }
 
 function seededRandom(seed: number) {
@@ -170,7 +172,37 @@ export function updateEntityAI(
     const moveTarget = newState === 'alert' && newLastKnown ? newLastKnown : newTarget;
     const dir = new THREE.Vector3().subVectors(moveTarget, newPos).normalize();
     dir.y = 0;
-    newPos.addScaledVector(dir, moveSpeed * delta);
+    const velocity = dir.multiplyScalar(moveSpeed * delta);
+    const candidatePos = newPos.clone().add(velocity);
+
+    // Entity wall collision
+    const ENTITY_RADIUS = 0.35;
+    const walls = getWallSegments();
+    let resolvedX = candidatePos.x;
+    let resolvedZ = candidatePos.z;
+
+    for (const wall of walls) {
+      if (
+        resolvedX + ENTITY_RADIUS > wall.minX &&
+        resolvedX - ENTITY_RADIUS < wall.maxX &&
+        resolvedZ + ENTITY_RADIUS > wall.minZ &&
+        resolvedZ - ENTITY_RADIUS < wall.maxZ
+      ) {
+        const overlapLeft = (resolvedX + ENTITY_RADIUS) - wall.minX;
+        const overlapRight = wall.maxX - (resolvedX - ENTITY_RADIUS);
+        const overlapTop = (resolvedZ + ENTITY_RADIUS) - wall.minZ;
+        const overlapBottom = wall.maxZ - (resolvedZ - ENTITY_RADIUS);
+        const minOverlap = Math.min(overlapLeft, overlapRight, overlapTop, overlapBottom);
+
+        if (minOverlap === overlapLeft) resolvedX = wall.minX - ENTITY_RADIUS;
+        else if (minOverlap === overlapRight) resolvedX = wall.maxX + ENTITY_RADIUS;
+        else if (minOverlap === overlapTop) resolvedZ = wall.minZ - ENTITY_RADIUS;
+        else resolvedZ = wall.maxZ + ENTITY_RADIUS;
+      }
+    }
+
+    newPos.x = resolvedX;
+    newPos.z = resolvedZ;
   }
 
   return {

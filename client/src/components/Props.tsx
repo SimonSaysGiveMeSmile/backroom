@@ -103,13 +103,21 @@ const Barrel = memo(function Barrel({ x, z }: { x: number; z: number }) {
 
 function getPropsForLevel(level: number): string[] {
   switch (level) {
-    case 0: return ['pillar', 'debris'];
-    case 1: return ['pillar', 'pipe', 'barrel', 'debris'];
+    case 0: return ['debris'];
+    case 1: return ['pipe', 'barrel', 'debris'];
     case 2: return ['pipe', 'barrel', 'debris'];
-    case 3: return ['pipe', 'barrel', 'debris', 'pillar'];
+    case 3: return ['pipe', 'barrel', 'debris'];
     case 4: return ['desk', 'chair', 'filing', 'debris'];
-    default: return ['pillar'];
+    default: return ['debris'];
   }
+}
+
+function isOpenArea(gx: number, gz: number, level: number): boolean {
+  if (Math.abs(gx) <= 2 && Math.abs(gz) <= 2) return true;
+  const clusterX = Math.floor(gx / 5);
+  const clusterZ = Math.floor(gz / 5);
+  const clusterSeed = clusterX * 1000 + clusterZ + level * 7777;
+  return seededRandom(clusterSeed) < 0.3;
 }
 
 export function Props() {
@@ -133,6 +141,9 @@ export function Props() {
         const dx = x - px;
         const dz = z - pz;
         if (dx * dx + dz * dz > PROP_RADIUS * PROP_RADIUS) continue;
+        const gx = Math.round(x / levelConfig.roomSize);
+        const gz = Math.round(z / levelConfig.roomSize);
+        if (isOpenArea(gx, gz, state.level)) continue;
         const type = propTypes[Math.floor(seededRandom(seed + 1) * propTypes.length)];
         const offsetX = (seededRandom(seed + 2) - 0.5) * levelConfig.roomSize * 0.6;
         const offsetZ = (seededRandom(seed + 3) - 0.5) * levelConfig.roomSize * 0.6;
