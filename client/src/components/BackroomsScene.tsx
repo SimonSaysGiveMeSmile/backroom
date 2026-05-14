@@ -133,8 +133,13 @@ export function BackroomsScene() {
 
   return (
     <group>
-      <ambientLight intensity={levelConfig.ambientIntensity} color={levelConfig.ambientColor} />
-      <hemisphereLight args={[levelConfig.ambientColor, levelConfig.floorColor, 0.3]} />
+      <ambientLight intensity={levelConfig.ambientIntensity * 1.4} color={levelConfig.ambientColor} />
+      <hemisphereLight args={[levelConfig.lightColor, levelConfig.floorColor, 0.5]} />
+      <directionalLight
+        color={levelConfig.lightColor}
+        intensity={0.3}
+        position={[0, 3, 0]}
+      />
 
       {visibleRooms.map((room, i) => (
         <Room key={`${state.level}-${i}`} {...room} levelConfig={levelConfig} />

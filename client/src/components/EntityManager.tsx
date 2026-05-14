@@ -1,4 +1,4 @@
-import { useRef, useMemo } from 'react';
+import { useRef, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { Entity } from './Entity';
@@ -80,11 +80,15 @@ export function EntityManager() {
     });
   });
 
-  const visibleEntities = useMemo(() => entitiesRef.current, [state.level]);
+  const visibleEntities = entitiesRef.current.filter(e => {
+    const dx = e.position.x - camera.position.x;
+    const dz = e.position.z - camera.position.z;
+    return dx * dx + dz * dz < 2500;
+  });
 
   return (
     <>
-      {entitiesRef.current.map(entity => (
+      {visibleEntities.map(entity => (
         <Entity
           key={entity.id}
           def={entity.def}
