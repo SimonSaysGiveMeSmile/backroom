@@ -115,6 +115,7 @@ export function SettingsMenu({ onClose }: SettingsMenuProps) {
             <div>Mouse — Look</div>
             <div>Shift — Sprint</div>
             <div>C — Crouch (reduces detection)</div>
+            <div>Space — Melee attack</div>
             <div>ESC — Settings</div>
           </div>
         </div>
@@ -130,6 +131,29 @@ export function SettingsMenu({ onClose }: SettingsMenuProps) {
               ))}
             </div>
           )}
+        </div>
+
+        <div style={sectionStyle}>
+          <div style={headingStyle}>CREDITS</div>
+          <div style={{ fontSize: '10px', lineHeight: '1.8', opacity: 0.7 }}>
+            <div>Created by SimonSaysGiveMeSmile</div>
+            <div>AI-assisted development with Claude (Anthropic)</div>
+            <div style={{ marginTop: '6px' }}>
+              <a href="https://github.com/SimonSaysGiveMeSmile/backroom" target="_blank" rel="noopener noreferrer" style={{ color: '#c8b560', textDecoration: 'underline' }}>
+                github.com/SimonSaysGiveMeSmile/backroom
+              </a>
+            </div>
+            <div style={{ marginTop: '4px' }}>MIT License — Free and open source</div>
+            <div style={{ marginTop: '6px', opacity: 0.6 }}>
+              Tech: React Three Fiber, Three.js, TypeScript, WebSocket, Vite
+            </div>
+            <div style={{ opacity: 0.6 }}>
+              Inspired by the Backrooms Wiki and SCP Foundation
+            </div>
+            <div style={{ marginTop: '6px', opacity: 0.5 }}>
+              backrooms.online — v1.0.0
+            </div>
+          </div>
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>

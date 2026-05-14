@@ -116,8 +116,8 @@ export function StartScreen({ onStart }: StartScreenProps) {
       </div>
 
       {/* Credits and open source info */}
-      <div style={{ textAlign: 'center', opacity: 0.5, fontSize: '0.7rem', lineHeight: 1.8 }}>
-        <p style={{ marginBottom: '4px' }}>
+      <div style={{ textAlign: 'center', opacity: 0.5, fontSize: '0.7rem', lineHeight: 2, maxWidth: '500px' }}>
+        <p style={{ marginBottom: '6px', fontSize: '0.75rem', opacity: 0.8 }}>
           A free, open-source tribute to the Backrooms community
         </p>
         <p>
@@ -127,15 +127,20 @@ export function StartScreen({ onStart }: StartScreenProps) {
             rel="noopener noreferrer"
             style={{ color: '#c8b560', textDecoration: 'underline' }}
           >
-            GitHub Repository
+            GitHub — SimonSaysGiveMeSmile/backroom
           </a>
-          {' '}&bull;{' '}
-          <span>MIT License</span>
-          {' '}&bull;{' '}
-          <span>Multiplayer enabled</span>
+        </p>
+        <p style={{ opacity: 0.7 }}>
+          MIT License &bull; Contributions welcome &bull; v1.0.0
         </p>
         <p style={{ marginTop: '8px', opacity: 0.6 }}>
-          Built with React Three Fiber &bull; Inspired by the Backrooms Wiki
+          Built with React Three Fiber &bull; Three.js &bull; TypeScript &bull; WebSocket Multiplayer
+        </p>
+        <p style={{ opacity: 0.5 }}>
+          Inspired by the Backrooms Wiki &bull; SCP Foundation community
+        </p>
+        <p style={{ marginTop: '10px', opacity: 0.4, fontSize: '0.6rem' }}>
+          Created by SimonSaysGiveMeSmile &bull; AI-assisted development with Claude
         </p>
       </div>
 
