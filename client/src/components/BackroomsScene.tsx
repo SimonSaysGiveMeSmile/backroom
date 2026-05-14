@@ -28,11 +28,11 @@ function seededRandom(seed: number) {
 }
 
 function isOpenArea(gx: number, gz: number, level: number): boolean {
-  if (Math.abs(gx) <= 3 && Math.abs(gz) <= 3) return true;
+  if (Math.abs(gx) <= 2 && Math.abs(gz) <= 2) return true;
   const clusterX = Math.floor(gx / 4);
   const clusterZ = Math.floor(gz / 4);
   const clusterSeed = clusterX * 1000 + clusterZ + level * 7777;
-  return seededRandom(clusterSeed) < 0.65;
+  return seededRandom(clusterSeed) < 0.35;
 }
 
 const MAP_EXTENT = 1000;
@@ -45,13 +45,29 @@ function generateRoomAt(gx: number, gz: number, level: number, roomSize: number,
   const atEdge = Math.abs(gx * roomSize) >= MAP_EXTENT || Math.abs(gz * roomSize) >= MAP_EXTENT;
 
   if (open) {
+    // Open areas still get occasional walls to form corridors/tunnels — max 1 wall
+    const openSeed = gx * 3571 + gz * 9137 + level * 44449;
+    const wallChance = 0.25;
+    let on = seededRandom(openSeed) < wallChance;
+    let os = seededRandom(openSeed + 1) < wallChance;
+    let oe = seededRandom(openSeed + 2) < wallChance;
+    let ow = seededRandom(openSeed + 3) < wallChance;
+    // Cap at 1 wall to keep it open but structured
+    const oCount = [on, os, oe, ow].filter(Boolean).length;
+    if (oCount > 1) {
+      const pick = Math.floor(seededRandom(openSeed + 4) * 4);
+      on = pick === 0;
+      os = pick === 1;
+      oe = pick === 2;
+      ow = pick === 3;
+    }
     return {
       x: gx * roomSize,
       z: gz * roomSize,
-      hasNorthWall: atEdge && gz < 0,
-      hasSouthWall: atEdge && gz > 0,
-      hasEastWall: atEdge && gx > 0,
-      hasWestWall: atEdge && gx < 0,
+      hasNorthWall: on || (atEdge && gz < 0),
+      hasSouthWall: os || (atEdge && gz > 0),
+      hasEastWall: oe || (atEdge && gx > 0),
+      hasWestWall: ow || (atEdge && gx < 0),
     };
   }
 
