@@ -7,6 +7,7 @@ import { EntityInstance, updateEntityAI, getRandomWaypoint } from '../entities/E
 import { useGame, getDifficultyMultipliers } from '../store/GameContext';
 import { LEVELS } from '../levels/LevelConfig';
 import { useEntitySounds } from '../hooks/useEntitySounds';
+import { playAttackSound } from '../audio/sfx';
 
 function seededRandom(seed: number) {
   const x = Math.sin(seed * 127.1 + seed * 311.7) * 43758.5453;
@@ -55,46 +56,47 @@ export function EntityManager() {
   }
 
   useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.code === 'Space' && !state.paused && meleeCooldown.current <= 0) {
-        e.preventDefault();
-        meleeCooldown.current = 0.5;
-        const playerPos = new THREE.Vector3(camera.position.x, 0, camera.position.z);
-        const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
-        forward.y = 0;
-        forward.normalize();
+    const handleClick = (e: MouseEvent) => {
+      if (e.button !== 0 || state.paused || meleeCooldown.current > 0) return;
+      meleeCooldown.current = 0.4;
+      const playerPos = new THREE.Vector3(camera.position.x, 0, camera.position.z);
+      const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+      forward.y = 0;
+      forward.normalize();
 
-        let closestDist = MELEE_RANGE;
-        let closestIdx = -1;
-        for (let i = 0; i < entitiesRef.current.length; i++) {
-          const ent = entitiesRef.current[i];
-          const toEntity = new THREE.Vector3().subVectors(ent.position, playerPos);
-          toEntity.y = 0;
-          const dist = toEntity.length();
-          if (dist > MELEE_RANGE) continue;
-          const dot = toEntity.normalize().dot(forward);
-          if (dot > 0.4 && dist < closestDist) {
-            closestDist = dist;
-            closestIdx = i;
-          }
+      let closestDist = MELEE_RANGE;
+      let closestIdx = -1;
+      for (let i = 0; i < entitiesRef.current.length; i++) {
+        const ent = entitiesRef.current[i];
+        const toEntity = new THREE.Vector3().subVectors(ent.position, playerPos);
+        toEntity.y = 0;
+        const dist = toEntity.length();
+        if (dist > MELEE_RANGE) continue;
+        const dot = toEntity.normalize().dot(forward);
+        if (dot > 0.4 && dist < closestDist) {
+          closestDist = dist;
+          closestIdx = i;
         }
+      }
 
-        if (closestIdx >= 0) {
-          const entity = entitiesRef.current[closestIdx];
-          const newHp = entity.hp - MELEE_DAMAGE;
-          if (newHp <= 0) {
-            entitiesRef.current = entitiesRef.current.filter((_, i) => i !== closestIdx);
-          } else {
-            entitiesRef.current[closestIdx] = {
-              ...entity, hp: newHp, state: 'chase', alertLevel: 3,
-              lastKnownPlayerPos: playerPos.clone(), stateTimer: 0,
-            };
-          }
+      const hit = closestIdx >= 0;
+      playAttackSound(hit);
+
+      if (hit) {
+        const entity = entitiesRef.current[closestIdx];
+        const newHp = entity.hp - MELEE_DAMAGE;
+        if (newHp <= 0) {
+          entitiesRef.current = entitiesRef.current.filter((_, i) => i !== closestIdx);
+        } else {
+          entitiesRef.current[closestIdx] = {
+            ...entity, hp: newHp, state: 'chase', alertLevel: 3,
+            lastKnownPlayerPos: playerPos.clone(), stateTimer: 0,
+          };
         }
       }
     };
-    window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
+    window.addEventListener('mousedown', handleClick);
+    return () => window.removeEventListener('mousedown', handleClick);
   }, [state.paused, camera]);
 
   useFrame((_, delta) => {

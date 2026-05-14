@@ -69,7 +69,7 @@ export function StartScreen({ onStart }: StartScreenProps) {
       </button>
 
       <p style={{ fontSize: '0.7rem', opacity: 0.3, marginBottom: '1.5rem' }}>
-        WASD to move &bull; Mouse to look &bull; Shift to run &bull; C to crouch &bull; ESC for settings
+        WASD to move &bull; Mouse to look &bull; Left click to attack &bull; Shift to run &bull; C to crouch &bull; ESC for settings
       </p>
 
       {/* Email signup */}

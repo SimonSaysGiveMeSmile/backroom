@@ -113,9 +113,9 @@ export function SettingsMenu({ onClose }: SettingsMenuProps) {
           <div style={{ fontSize: '10px', lineHeight: '1.8', opacity: 0.7 }}>
             <div>WASD / Arrows — Move</div>
             <div>Mouse — Look</div>
+            <div>Left Click — Attack</div>
             <div>Shift — Sprint</div>
             <div>C — Crouch (reduces detection)</div>
-            <div>Space — Melee attack</div>
             <div>ESC — Settings</div>
           </div>
         </div>

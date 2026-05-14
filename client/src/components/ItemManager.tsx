@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { ItemPickup } from './ItemPickup';
 import { ITEMS, ItemDef } from '../items/ItemData';
 import { useGame } from '../store/GameContext';
+import { playPickupSound } from '../audio/sfx';
 
 interface SpawnedItem {
   id: number;
@@ -66,10 +67,19 @@ export function ItemManager() {
     setItems(prev => prev.map(i => i.id === item.id ? { ...i, collected: true } : i));
 
     const effect = item.def.effect;
-    if (effect.health && effect.health > 0) dispatch({ type: 'HEAL', amount: effect.health });
+    if (effect.health && effect.health > 0) {
+      dispatch({ type: 'HEAL', amount: effect.health });
+      playPickupSound('health');
+    } else if (effect.water) {
+      dispatch({ type: 'RESTORE_WATER', amount: effect.water });
+      playPickupSound('water');
+    } else if (effect.food) {
+      dispatch({ type: 'RESTORE_FOOD', amount: effect.food });
+      playPickupSound('food');
+    } else {
+      playPickupSound('generic');
+    }
     if (effect.health && effect.health < 0) dispatch({ type: 'DAMAGE', amount: -effect.health });
-    if (effect.water) dispatch({ type: 'RESTORE_WATER', amount: effect.water });
-    if (effect.food) dispatch({ type: 'RESTORE_FOOD', amount: effect.food });
     dispatch({ type: 'ADD_ITEM', item: { id: item.def.id, name: item.def.name, quantity: 1 } });
   };
 
