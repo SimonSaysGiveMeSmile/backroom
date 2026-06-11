@@ -4,9 +4,11 @@ import { WebSocketServer, WebSocket } from 'ws';
 import http from 'http';
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const EMAILS_FILE = path.join(__dirname, '..', 'emails.json');
 
 app.use(cors());
