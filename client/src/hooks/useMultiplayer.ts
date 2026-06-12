@@ -20,14 +20,29 @@ export function useMultiplayer(level: number) {
   const [playerCount, setPlayerCount] = useState(0);
 
   useEffect(() => {
-    const ws = new WebSocket(WS_URL);
-    wsRef.current = ws;
+    // Reconnect with backoff — the hosted server (Render free tier) sleeps
+    // when idle and its edge can drop connections, so one failure must not
+    // permanently kill multiplayer.
+    let disposed = false;
+    let retries = 0;
+    let timer: ReturnType<typeof setTimeout> | undefined;
 
-    ws.onopen = () => setConnected(true);
-    ws.onclose = () => {
-      setConnected(false);
-      setPlayers(new Map());
-    };
+    const connect = () => {
+      const ws = new WebSocket(WS_URL);
+      wsRef.current = ws;
+
+      ws.onopen = () => {
+        retries = 0;
+        setConnected(true);
+      };
+      ws.onclose = () => {
+        setConnected(false);
+        setPlayers(new Map());
+        if (!disposed) {
+          const delay = Math.min(30000, 1000 * 2 ** retries++);
+          timer = setTimeout(connect, delay);
+        }
+      };
 
     ws.onmessage = (event) => {
       try {
@@ -68,10 +83,15 @@ export function useMultiplayer(level: number) {
             break;
         }
       } catch {}
+      };
     };
 
+    connect();
+
     return () => {
-      ws.close();
+      disposed = true;
+      if (timer) clearTimeout(timer);
+      wsRef.current?.close();
       wsRef.current = null;
     };
   }, []);
