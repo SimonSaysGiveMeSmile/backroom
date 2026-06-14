@@ -3,6 +3,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useGame } from '../store/GameContext';
 import { resolveCollision } from '../systems/Collision';
+import { touch } from '../touch';
 
 const SPEED = 3;
 const SPRINT_SPEED = 5.5;
@@ -51,7 +52,7 @@ export function Player() {
     if (state.paused) return;
 
     const k = keys.current;
-    const sprinting = (k['ShiftLeft'] || k['ShiftRight']) && !state.isCrouching;
+    const sprinting = ((k['ShiftLeft'] || k['ShiftRight']) || touch.sprint) && !state.isCrouching;
     const crouching = state.isCrouching;
 
     dispatch({ type: 'SET_SPRINTING', value: sprinting });
@@ -65,6 +66,10 @@ export function Player() {
     if (k['KeyS'] || k['ArrowDown']) direction.current.z += 1;
     if (k['KeyA'] || k['ArrowLeft']) direction.current.x -= 1;
     if (k['KeyD'] || k['ArrowRight']) direction.current.x += 1;
+
+    // touch joystick (analog) — up = forward
+    direction.current.x += touch.mx;
+    direction.current.z += touch.my;
 
     direction.current.normalize();
     isMoving.current = direction.current.length() > 0;
