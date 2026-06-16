@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { isTouchDevice } from '../touch';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
@@ -85,7 +86,9 @@ export function StartScreen({ onStart }: StartScreenProps) {
       </button>
 
       <p style={{ fontSize: '0.7rem', opacity: 0.3, marginBottom: '1.5rem' }}>
-        WASD to move &bull; Mouse to look &bull; Left click to attack &bull; Shift to run &bull; C to crouch &bull; ESC for settings
+        {isTouchDevice()
+          ? 'Joystick to move · drag to look · SPRINT · CROUCH · ☰ menu'
+          : 'WASD to move • Mouse to look • Left click to attack • Shift to run • C to crouch • ESC for settings'}
       </p>
 
       {/* Email signup */}
