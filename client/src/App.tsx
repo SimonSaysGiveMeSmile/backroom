@@ -6,11 +6,11 @@ import { Player } from './components/Player';
 import { HUD } from './components/HUD';
 import { StartScreen } from './components/StartScreen';
 import { SettingsMenu } from './components/SettingsMenu';
-import { TouchLook } from './components/TouchLook';
+import { TouchLook } from './shared-touch/TouchLook';
 import { MobileControls } from './components/MobileControls';
 import { GameProvider, useGame } from './store/GameContext';
 import { LEVELS } from './levels/LevelConfig';
-import { isTouchDevice } from './touch';
+import { isTouchDevice } from './shared-touch/touch';
 
 function Game() {
   const { state, dispatch } = useGame();

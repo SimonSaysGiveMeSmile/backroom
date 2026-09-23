@@ -3,7 +3,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useGame } from '../store/GameContext';
 import { resolveCollision } from '../systems/Collision';
-import { touch } from '../touch';
+import { touch } from '../shared-touch/touch';
 
 const SPEED = 3;
 const SPRINT_SPEED = 5.5;
